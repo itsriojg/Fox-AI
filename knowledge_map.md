@@ -1,26 +1,57 @@
-Profil HIMATIF
+1. Profil HIMATIF
+Tujuan:
+Memberikan informasi umum mengenai HIMATIF.
+Data:
 - Sejarah
+- Visi
+- Misi
 - Logo
 - Makna Logo
-- Visi Misi
+Sumber:
+- PDF Buku Panduan
+- Website HIMATIF
 
-Kepengurusan
+2. Kepengurusan
+Data:
 - Ketua
 - Wakil
+- Sekretaris
+- Bendahara
 - Divisi
+Sumber:
+- PDF Kepengurusan
+- Google Sheet
 
-Akademik
-- Dosen
-- Mata Kuliah
-
-Event
+3. Event
+Data:
 - Workshop
-- Seminar
 - Bootcamp
+- Seminar
+- Lomba
+Sumber:
+- Kalender Event
+- Google Sheet
 
-FAQ
-- Cara daftar
-- Kontak
+4. FAQ
+Data:
+- Cara daftar HIMATIF
+- Cara ikut workshop
+- Kontak pengurus
+Sumber:
+- FAQ PDF
 
-Peraturan
+5. Akademik
+Data:
+- Dosen
+- Mata kuliah
+- Laboratorium
+Sumber:
+- Buku Panduan Mahasiswa
+
+6. Peraturan
+Data:
 - Tata tertib
+- Hak anggota
+- Kewajiban anggota
+Sumber:
+- PDF Tata Tertib
