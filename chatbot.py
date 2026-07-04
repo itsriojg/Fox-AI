@@ -1,10 +1,6 @@
-responses = {
-      "halo" : "Halo juga:)",
-      "kamu siapa" : "Saya project pillow-fox",
-      "bisa bantu saya?" : "Tentu saja, apa yang bisa saya bantu?",
-      "selamat pagi" : "Selamat pagi",
-      "" : ""
-    }
+import json
+with open("responses.json","r") as file:
+  responses = json.load(file)
 
 def get_reply(message):
   message = message.strip().lower()
