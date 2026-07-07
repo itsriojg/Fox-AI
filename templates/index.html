@@ -10,10 +10,15 @@
 </p>
 <br>
 <br>
-<form action="/" method="post">
-  <input type="text" name="pesan"></input>
+{%for pesan in riwayat_chat%}
+<p>
+  <b>{{pesan["sender"]}}</b> : {{pesan["text"]}}
+</p>
+{%endfor%}
+<br>
+<form action="/" method="POST">
+  <input type="text" name="pesan">
   <button type="submit">KIRIM</button>
 </form>
-<p>{{balasan}}</p>
 </body>
 </html>
