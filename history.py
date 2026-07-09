@@ -14,4 +14,9 @@ def ambil_history():
   if "history" not in session:
     session["history"] = []
   return session["history"]
- 
+
+def hapus_history():
+  if "history" not in session:
+    session["history"] = []
+  session["history"] = []
+  session.modified = True
