@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect 
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
+from database import build_database
 app = Flask(__name__)
 app.secret_key = "rahasiaaa"
-
+build_database()
 @app.route("/", methods=["GET", "POST"])
 
 def home():
