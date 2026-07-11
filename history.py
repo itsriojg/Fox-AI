@@ -1,4 +1,5 @@
 from flask import session
+from database import insert_history
 
 def tambah_message(sender, text):
   if "history" not in session:
@@ -8,6 +9,7 @@ def tambah_message(sender, text):
     "text": text
   }
   session["history"].append(pesan)
+  insert_history(sender, text)
   session.modified = True
   
 def ambil_history():

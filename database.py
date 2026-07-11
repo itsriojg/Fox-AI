@@ -12,3 +12,13 @@ def build_database():
     )
   conn.commit()
   conn.close()
+  
+def insert_history(sender, text):
+  conn = sqlite3.connect("database.db")
+  cursor = conn.cursor()
+  cursor.execute(
+    """INSERT INTO history(sender, text)
+    VALUES(?,?)""", (sender, text)
+    )
+  conn.commit()
+  conn.close()
