@@ -1,24 +1,18 @@
-from flask import session
-from database import insert_history
+from database import insert_history, get_history, clear_history
 
 def tambah_message(sender, text):
-  if "history" not in session:
-    session["history"] = []
-  pesan = {
-    "sender": sender,
-    "text": text
-  }
-  session["history"].append(pesan)
   insert_history(sender, text)
-  session.modified = True
   
 def ambil_history():
-  if "history" not in session:
-    session["history"] = []
-  return session["history"]
-
+  results = get_history()
+  hasil = []
+  for row in results:
+    pesan = {
+    "sender": row[1],
+    "text": row[2]
+    }
+    hasil.append(pesan)
+  return hasil
+  
 def hapus_history():
-  if "history" not in session:
-    session["history"] = []
-  session["history"] = []
-  session.modified = True
+  clear_history()

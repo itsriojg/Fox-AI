@@ -22,3 +22,18 @@ def insert_history(sender, text):
     )
   conn.commit()
   conn.close()
+  
+def get_history():
+  conn = sqlite3.connect("database.db")
+  cursor = conn.cursor()
+  cursor.execute("SELECT*FROM history")
+  results = cursor.fetchall()
+  conn.close()
+  return results
+  
+def clear_history():
+  conn = sqlite3.connect("database.db")
+  cursor = conn.cursor()
+  cursor.execute("DELETE FROM history")
+  conn.commit()
+  conn.close()
