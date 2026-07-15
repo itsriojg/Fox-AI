@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, redirect
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
 from database import build_database
+from knowledge import brain_knowledge
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
