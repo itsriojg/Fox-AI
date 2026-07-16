@@ -11,7 +11,7 @@ def clean_message(message):
   message = message.replace("!!","")
   return message
 
-def get_reply(message):
+def get_reply(message, knowledge):
   message = clean_message(message)
   reply = responses.get(message, "Maaf saya tidak mengerti")
   return reply

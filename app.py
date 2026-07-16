@@ -12,13 +12,14 @@ from knowledge import brain_knowledge
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 build_database()
+knowledge = brain_knowledge()
 @app.route("/", methods=["GET", "POST"])
 
 def home():
   if request.method == "POST":
     message = request.form.get("pesan", "")
     if message != "":
-      reply = get_reply(message)
+      reply = get_reply(message, knowledge)
       tambah_message("Rio", message)
       tambah_message("AI", reply)
       return redirect("/")
