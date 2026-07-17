@@ -1,6 +1,7 @@
 import json
 with open("responses.json","r") as file:
   responses = json.load(file)
+from ai import get_ai_reply
 
 def clean_message(message):
   message = message.strip().lower()
@@ -12,6 +13,15 @@ def clean_message(message):
   return message
 
 def get_reply(message, knowledge):
-  message = clean_message(message)
-  reply = responses.get(message, "Maaf saya tidak mengerti")
+  prompt = f"""Knowledge:
+{knowledge}
+
+Pertanyaan:
+{message}
+"""
+
+  reply = get_ai_reply(prompt)
   return reply
+  #message = clean_message(message)
+  #reply = responses.get(message, "Maaf saya tidak mengerti")
+  #return reply
