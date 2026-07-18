@@ -1,16 +1,4 @@
-import json
-with open("responses.json","r") as file:
-  responses = json.load(file)
 from ai import get_ai_reply
-
-def clean_message(message):
-  message = message.strip().lower()
-  message = message.replace("!!!","")
-  message = message.replace("!","")
-  message = message.replace("?","")
-  message = message.replace(".","")
-  message = message.replace("!!","")
-  return message
 
 def get_reply(message, knowledge):
   prompt = f"""Kamu adalah Fox AI.
@@ -41,6 +29,3 @@ Pertanyaan:
 
   reply = get_ai_reply(prompt)
   return reply
-  #message = clean_message(message)
-  #reply = responses.get(message, "Maaf saya tidak mengerti")
-  #return reply

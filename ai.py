@@ -41,5 +41,5 @@ def get_ai_reply(prompt):
     data = response.json()
     candidates = data.get("candidates")
     if candidates:
-      candidates[0]["content"]["parts"][0]["text"]
+      return candidates[0]["content"]["parts"][0]["text"]
   return "Maaf, server sedang mengalami kendala."
