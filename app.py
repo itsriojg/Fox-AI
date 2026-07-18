@@ -19,7 +19,8 @@ def home():
   if request.method == "POST":
     message = request.form.get("pesan", "")
     if message != "":
-      reply = get_reply(message, knowledge)
+      history = ambil_history()
+      reply = get_reply(message, knowledge, history)
       tambah_message("Rio", message)
       tambah_message("AI", reply)
       return redirect("/")

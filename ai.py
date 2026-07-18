@@ -25,7 +25,7 @@ def get_ai_reply(prompt):
     ]
   }
   try:
-  response = requests.post(
+    response = requests.post(
     url = URL,
     headers = headers,
     json = body,
