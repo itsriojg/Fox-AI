@@ -21,18 +21,20 @@ def read_pdf(path):
   return text
     
 def brain_knowledge(message):
-  path = pilih_pdf(message)
-  print(f"Path terpilih: {path}")
-  if path != "":
-    file_or_files = read_pdf(path)
+  paths = pilih_pdf(message)
+  if paths != []:
+    knowledge = ""
+    for files in paths:
+      hasil_baca = read_pdf(files)
+      knowledge += hasil_baca
+    print("PDF terpilih:", paths)
+    return knowledge
   else:
     files = get_path_pdf_files()
     knowledge = ""
     for file in files:
-      print(f"Membaca: {file}")
       knowledge = knowledge + read_pdf(file)
     return knowledge
-  return file_or_files
   
 def index_pdf():
   paths = get_path_pdf_files()
@@ -51,8 +53,9 @@ def index_pdf():
   
 def pilih_pdf(message):
   index_files = index_pdf()
+  paths = []
   for file in index_files:
     if file["judul"] in message:
       file_path = file["path"]
-      return file_path
-  return ""
+      paths.append(file_path)
+  return paths

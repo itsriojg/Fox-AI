@@ -19,6 +19,9 @@ def home():
     message = request.form.get("pesan", "")
     if message != "":
       knowledge = brain_knowledge(message)
+      print("=" * 50)
+      print(knowledge[:1000])
+      print("=" * 50)
       history = ambil_history()
       reply = get_reply(message, knowledge, history)
       tambah_message("Rio", message)
