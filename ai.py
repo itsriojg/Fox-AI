@@ -29,7 +29,7 @@ def get_ai_reply(prompt):
     url = URL,
     headers = headers,
     json = body,
-    timeout = 10
+    timeout = 30
     )
   except ConnectionError:
     return "Tidak dapat terhubung ke server, silahkan periksa kembali koneksi internet Anda"

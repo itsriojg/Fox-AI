@@ -12,12 +12,12 @@ from knowledge import brain_knowledge
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 build_database()
-knowledge = brain_knowledge()
 @app.route("/", methods=["GET", "POST"])
 
 def home():
   if request.method == "POST":
     message = request.form.get("pesan", "")
+    knowledge = brain_knowledge(message)
     if message != "":
       history = ambil_history()
       reply = get_reply(message, knowledge, history)
