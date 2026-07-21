@@ -17,12 +17,14 @@ build_database()
 def home():
   if request.method == "POST":
     message = request.form.get("pesan", "")
-    knowledge = brain_knowledge(message)
     if message != "":
+      knowledge = brain_knowledge(message)
       history = ambil_history()
       reply = get_reply(message, knowledge, history)
       tambah_message("Rio", message)
       tambah_message("AI", reply)
+      return redirect("/")
+    else:
       return redirect("/")
   return render_template("index.html", nama="RIO", riwayat_chat=ambil_history())
 
