@@ -18,8 +18,6 @@ Riwayat obrolan:
 Pertanyaan:
 {message}
 """
-  print(message)
-  print(len(knowledge))
-
+  
   reply = get_ai_reply(prompt)
   return reply

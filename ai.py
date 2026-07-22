@@ -7,7 +7,7 @@ load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
-
+import time
 def get_ai_reply(prompt):
   url = URL
   headers = {
@@ -25,12 +25,15 @@ def get_ai_reply(prompt):
     ]
   }
   try:
+    start = time.time()
     response = requests.post(
     url = URL,
     headers = headers,
     json = body,
     timeout = 30
     )
+    end = time.time()
+    print(f"Waktu request Gemini: {end - start:.2f} detik")
   except ConnectionError:
     return "Tidak dapat terhubung ke server, silahkan periksa kembali koneksi internet Anda"
   except Timeout:
