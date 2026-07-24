@@ -6,12 +6,12 @@ load_dotenv()
 from flask import Flask, render_template, request, redirect 
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
-from database import build_database
+from database import build_table_history
 from rag import brain_knowledge, pilih_pdf
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
-build_database()
+build_table_history()
 @app.route("/", methods=["GET", "POST"])
 
 def home():
