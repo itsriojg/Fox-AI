@@ -35,5 +35,9 @@ def clear_history():
   hapus_history()
   return redirect("/")
 
-app.run()
+port = int(os.getenv("PORT", 5000))
+app.run(
+  host="0.0.0.0",
+  port=port
+  )
 
