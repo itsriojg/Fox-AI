@@ -1,5 +1,7 @@
 from pypdf import PdfReader
 from knowledge import get_path_pdf_files
+from database import clear_knowledge, insert_knowledge
+from vector_db import rebuild_faiss
 import os
 import re
 
@@ -23,33 +25,7 @@ def index_pdf():
     "path" : path
    }
    index_files.append(index_file)
-  
   return index_files
-   
-def pilih_pdf(message):
-  index_files = index_pdf()
-  paths = []
-  for file in index_files:
-    if file["judul"] in message:
-      file_path = file["path"]
-      paths.append(file_path)
-  return paths  
-    
-def brain_knowledge(message):
-  paths = pilih_pdf(message)
-  if paths != []:
-    knowledge = ""
-    for files in paths:
-      hasil_baca = read_pdf(files)
-      chunks = make_chunks(hasil_baca)
-      knowledge += hasil_baca
-    return knowledge
-  else:
-    files = get_path_pdf_files()
-    knowledge = ""
-    for file in files:
-      knowledge = knowledge + read_pdf(file)
-    return knowledge
     
 def make_chunks(text):
   chunks = []
@@ -57,7 +33,7 @@ def make_chunks(text):
   paragraphs = text.split("\n")
   for paragraph in paragraphs:
     if len(current_chunk) + len(paragraph) <= 800:
-      current_chunk += paragraph
+      current_chunk += paragraph + "\n"
     else:
       chunks.append(current_chunk)
       current_chunk = paragraph
@@ -68,7 +44,19 @@ def make_chunks(text):
 
 def clean_text(text):
   text = text.strip()
-  re.sub(r"[\t]+", " ", text)
+  text = re.sub(r"[\t]+", " ", text)
   text = re.sub(r"\n{3,}", "\n\n", text)
   return text
+  
+def build_knowledge():
+  clear_knowledge()
+  paths = get_path_pdf_files()
+  for path in paths:
+    text = read_pdf(path)
+    text = clean_text(text)
+    chunks = make_chunks(text)
+    source = os.path.splitext(os.path.basename(path))[0]
+    for chunk in chunks:
+      insert_knowledge(source, chunk)
+  rebuild_faiss()
   

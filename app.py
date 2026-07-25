@@ -6,29 +6,24 @@ load_dotenv()
 from flask import Flask, render_template, request, redirect 
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
-from database import build_table_history
-from rag import brain_knowledge, pilih_pdf
+from database import build_table_history, build_table_knowledge
+from rag import build_knowledge
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 build_table_history()
+build_table_knowledge()
+build_knowledge()
 @app.route("/", methods=["GET", "POST"])
 
 def home():
   if request.method == "POST":
     message = request.form.get("pesan", "")
     if message != "":
-      files = pilih_pdf(message)
-      if files == []:
-        knowledge = ""
-      else:
-        knowledge = brain_knowledge(message)
       history = ambil_history()
-      reply = get_reply(message, knowledge, history)
+      reply = get_reply(message, history)
       tambah_message("Rio", message)
       tambah_message("AI", reply)
-      print(len(knowledge))
-      print(len(history))
       return redirect("/")
     else:
       return redirect("/")

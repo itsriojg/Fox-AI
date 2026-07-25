@@ -79,6 +79,19 @@ def get_chunk_by_id(id):
     SELECT chunk
     FROM knowledge
     WHERE id = ?""", (id,))
-  chunk = cursor.fetchone()[0]
+  chunk = cursor.fetchone()
+  if chunk is None:
+    conn.close()
+    return None
+    
   conn.close()
-  return chunk
+  return chunk[0]
+  
+def clear_knowledge():
+  conn = sqlite3.connect("database.db")
+  cursor = conn.cursor()
+  cursor.execute(
+    "DELETE FROM HISTORY"
+    )
+  conn.commit(
+  conn.close()
