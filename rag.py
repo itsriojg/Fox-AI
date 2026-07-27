@@ -46,6 +46,7 @@ def clean_text(text):
   text = text.strip()
   text = re.sub(r"[\t]+", " ", text)
   text = re.sub(r"\n{3,}", "\n\n", text)
+  text = text.encode("utf-16", "surrogatepass").decode("utf-16", "ignore")
   return text
   
 def build_knowledge():

@@ -91,7 +91,15 @@ def clear_knowledge():
   conn = sqlite3.connect("database.db")
   cursor = conn.cursor()
   cursor.execute(
-    "DELETE FROM HISTORY"
+    "DELETE FROM knowledge"
     )
-  conn.commit(
+  conn.commit()
   conn.close()
+
+def knowledge_exists():
+  conn = sqlite3.connect("database.db")
+  cursor = conn.cursor()
+  cursor.execute("SELECT COUNT(*) FROM knowledge")
+  jumlah = cursor.fetchone()[0]
+  conn.close()
+  return jumlah > 0

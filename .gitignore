@@ -1,4 +1,7 @@
 __pycache__/
 *.pyc
 *.db
+*.index
 .env
+*.pdf
+venv/

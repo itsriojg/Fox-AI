@@ -14,12 +14,14 @@ else:
 def get_reply(message, history):
   query_embedding = get_embedding(message)
   context = []
-  scores, indexes = cari_embedding(index, query_embedding, top_k=3)
+  scores, indexes = cari_embedding(index, query_embedding, top_k=5)
   for id in indexes[0]:
     if id == -1:
       continue
-    chunk = get_chunk_by_id(id)
-    context.append(chunk)
+    chunk = get_chunk_by_id(int(id)+1)
+    if chunk is not None:
+      context.append(chunk)
+
   knowledge = "\n\n".join(context)
   
   history_text = ""
