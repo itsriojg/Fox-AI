@@ -11,13 +11,14 @@ body{
 }
 
 .chat-container{
-  width: 90%;
+  width: 100%;
   max-width: 900px;
-  margin: 30px auto;
+  margin: 0 auto;
   background: #151c2c;
   border: 1px solid #24304d;
   border-radius: 20px;
   overflow: hidden;
+  min-height: 100vh;
   box-shadow: 0 0 30px   rgba(0,180,255,.15);
 }
 
@@ -47,25 +48,39 @@ body{
 
 .message{
   width: fit-content;
-  max-width: 70%;
-  padding: 10px 15px;
-  margin: 10px;
-  border-radius: 15px;
-  word-wrap: break-word;
+  max-width: 75%;
+  padding: 14px 18px;
+  margin: 8px 0;
+  border-radius: 18px;
+  line-height: 1.6;
+  font-size: 15px;
+  animation: messageShow .25s ease;
+  transition:.25s;
+}
+
+.message:hover{
+  transform:translateY(-2px);
 }
 
 .Rio{
-  background: #222;
-  color: white;
-  margin-left: auto;
-  text-align: right;
+  background:#2a3146;
+  color:white;
+  margin-left:auto;
+  border-bottom-right-radius:6px;
+  box-shadow:0 8px 20px 
+  rgba(0,0,0,.25);
 }
 
+
 .AI{
-  background: #eee;
-  color: black;
-  margin-right: auto;
+  background:#1b2840;
+  color:#eaf8ff;
+  margin-right:auto;
+  border-bottom-left-radius:6px;
+  border:1px solid rgba(89,216,255,.2);
+  box-shadow:0 0 18px rgba(89,216,255,.12);
 }
+
 
 .chat-input form{
   display: flex;
@@ -75,10 +90,22 @@ body{
 .chat-input input{
   flex: 1;
   padding: 12px 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  background: #101726;
+  color: white;
+  border: 1px solid #24304d;
+  border-radius: 12px;
   outline: none;
   font-size: 16px;
+  transition: .25s;
+}
+
+.chat-input input:focus{
+  border-color: #59d8ff;
+  box-shadow: 0 0 12px rgba(89,216,255,.35);
+}
+
+.chat-input button:active{
+  transform:scale(.96);
 }
 
 .chat-header h1{
@@ -93,13 +120,50 @@ body{
 }
 
 .chat-input button{
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  padding:12px 22px;
+  background:#59d8ff;
+  color:#08111f;
+  font-weight:bold;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.chat-input button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(89,216,255,.35);
 }
 
 .chat-actions{
   display: flex;
   justify-content: flex-end;
+}
+
+@keyframes messageShow{
+  from{
+    opacity:0;
+      transform:translateY(12px) scale(.97);
+    }
+  
+    to{
+      opacity:1;
+      transform:translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 768px){
+  .chat-container{
+     border-radius: 0;
+  }
+  
+  .message{
+     max-width: 85%;
+     font-size: 14px;
+  }
+
+   .chat-header h1{
+     font-size: 24px;
+  }
+
 }
