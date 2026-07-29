@@ -1,0 +1,105 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body{
+  font-family: Arial, sans-serif;
+  background: #0b0f19;
+  color: white;
+}
+
+.chat-container{
+  width: 90%;
+  max-width: 900px;
+  margin: 30px auto;
+  background: #151c2c;
+  border: 1px solid #24304d;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 30px   rgba(0,180,255,.15);
+}
+
+.chat-header{
+  background:#101726;
+  padding:25px;
+  border-bottom:1px solid #24304d;
+}
+
+.chat-history{
+  background-color: white;
+  height: 400px;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-input{
+  background: white;
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message{
+  width: fit-content;
+  max-width: 70%;
+  padding: 10px 15px;
+  margin: 10px;
+  border-radius: 15px;
+  word-wrap: break-word;
+}
+
+.Rio{
+  background: #222;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+}
+
+.AI{
+  background: #eee;
+  color: black;
+  margin-right: auto;
+}
+
+.chat-input form{
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input input{
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 16px;
+}
+
+.chat-header h1{
+  color:#59d8ff;
+  font-size:30px;
+  margin-bottom:8px;
+}
+
+.chat-header p{
+  color:#8f9bb3;
+  font-size: 15px;
+}
+
+.chat-input button{
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.chat-actions{
+  display: flex;
+  justify-content: flex-end;
+}

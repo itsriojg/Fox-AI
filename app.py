@@ -15,9 +15,14 @@ build_table_history()
 build_table_knowledge()
 if not knowledge_exists():
   build_knowledge()
-@app.route("/", methods=["GET", "POST"])
 
+@app.route("/")
 def home():
+  return render_template("home.html")
+
+
+@app.route("/chatbot", methods=["GET", "POST"])
+def chatbot():
   if request.method == "POST":
     message = request.form.get("pesan", "")
     if message != "":
@@ -25,20 +30,15 @@ def home():
       reply = get_reply(message, history)
       tambah_message("Rio", message)
       tambah_message("AI", reply)
-      return redirect("/")
+      return redirect("/chatbot")
     else:
-      return redirect("/")
-  return render_template("index.html", nama="RIO", riwayat_chat=ambil_history())
+      return redirect("/chatbot")
+  return render_template("chatbot.html", nama="RIO", riwayat_chat=ambil_history())
+
 
 @app.route("/clear", methods=["POST"])
-
 def clear_history():
   hapus_history()
-  return redirect("/")
+  return redirect("/chatbot")
 
-port = int(os.getenv("PORT", 5000))
-app.run(
-  host="0.0.0.0",
-  port=port
-  )
-
+app.run()
