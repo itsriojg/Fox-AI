@@ -1,64 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Fox AI</title>
-  <link rel="stylesheet" href="/static/css/chatbot.css">
+    <title>Fox AI</title>
+
+    <link rel="stylesheet" href="/static/css/chatbot.css">
 </head>
-  
+
 <body>
-  
- <div class="chat-container">
 
-   
-  <div class="chat_header">
-    
-   <h1>Halo {{nama}}</h1>
-   <p>
-    Selamat datang di project pillow-fox
-   </p>
-    
-  </div>
+<div class="chat-container">
 
-   
-  <div class="chat-history">
-   
-   {%for pesan in riwayat_chat%}
-    
-   <div class="message {{pesan['sender']}}">
-    {{pesan["text"]}}
-   </div>
-    
-   {%endfor%}
-    
-  </div>
-   
-   
-  <div class="chat-input">
-   
-  <form action="/chatbot" method="POST">
-   <input type="text" name="pesan" placeholder="Ketik pesan...">
-   <button type="submit">KIRIM</button>
-  </form>
+    <!-- Header -->
+    <div class="chat-header">
 
- <div class="chat_action"> 
-   
-  <form action="/clear" method="POST">
-   <button>CLEAR</button>
-  </form>
-   
- </div>
-    
-  </div>
+        <button class="back-button">
+            ←
+        </button>
 
- </div>
+        <div class="header-info">
 
- <script>
-  let chatHistory = document.querySelector(".chat-history");
+            <div class="header-logo">
+                🦊
+            </div>
+
+            <div class="header-text">
+                <h2>Fox AI</h2>
+                <p>AI Assistant HIMATIF</p>
+            </div>
+
+        </div>
+
+        <div class="status">
+            <span class="status-dot">
+            </span>
+            <span>Online</span>
+        </div>
+        <form action="/clear" method="POST">
+        <button class="clear-button" type="submit">
+            🗑
+        </button>
+        </form>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-history">
+
+        {% if riwayat_chat|length == 0 %}
+
+        <div class="welcome-screen">
+
+            <div class="fox-logo">
+                🦊
+            </div>
+
+            <h1>Welcome to HIMATIF AI</h1>
+
+            <p>AI Assistant HIMATIF</p>
+
+            <div class="suggestions">
+
+                <button type="button" class="suggestion-btn">
+                    Apa itu HIMATIF?
+                </button>
+
+                <button type="button" class="suggestion-btn">
+                    Divisi apa saja di HIMATIF?
+                </button>
+
+                <button type="button" class="suggestion-btn">
+                    Siapa ketua HIMATIF saat ini?
+                </button>
+
+                <button type="button" class="suggestion-btn">
+                    Bagaimana cara bergabung?
+                </button>
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+            {% for pesan in riwayat_chat %}
+
+            <div class="message {{pesan['sender']}}">
+                {{pesan["text"]}}
+            </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input">
+
+        <form id="chat-form" action="/chatbot" method="POST">
+
+            <input
+                id="chat-input"
+                type="text"
+                name="pesan"
+                placeholder="Tanya apapun tentang HIMATIF..."
+                autocomplete="off"
+            >
+
+            <button type="submit">
+                ➜
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    const chatHistory = document.querySelector(".chat-history");
     chatHistory.scrollTop = chatHistory.scrollHeight;
- </script>
-  
+</script>
+
+<script src="/static/js/chatbot.js"></script>
+
 </body>
 </html>
