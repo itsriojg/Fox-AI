@@ -8,29 +8,23 @@
 
     <link rel="stylesheet" href="/static/css/chatbot.css">
 </head>
-
 <body>
 
 <div class="chat-container">
 
     <!-- Header -->
     <div class="chat-header">
-
         <button class="back-button">
             ←
         </button>
-
         <div class="header-info">
-
             <div class="header-logo">
                 🦊
             </div>
-
             <div class="header-text">
                 <h2>Fox AI</h2>
                 <p>AI Assistant HIMATIF</p>
             </div>
-
         </div>
 
         <div class="status">
@@ -47,60 +41,40 @@
 
     <!-- Chat Area -->
     <div class="chat-history">
-
         {% if riwayat_chat|length == 0 %}
-
         <div class="welcome-screen">
-
             <div class="fox-logo">
                 🦊
             </div>
-
             <h1>Welcome to HIMATIF AI</h1>
-
             <p>AI Assistant HIMATIF</p>
-
             <div class="suggestions">
-
                 <button type="button" class="suggestion-btn">
                     Apa itu HIMATIF?
                 </button>
-
                 <button type="button" class="suggestion-btn">
                     Divisi apa saja di HIMATIF?
                 </button>
-
                 <button type="button" class="suggestion-btn">
                     Siapa ketua HIMATIF saat ini?
                 </button>
-
                 <button type="button" class="suggestion-btn">
                     Bagaimana cara bergabung?
                 </button>
-
             </div>
-
         </div>
-
         {% else %}
-
             {% for pesan in riwayat_chat %}
-
             <div class="message {{pesan['sender']}}">
                 {{pesan["text"]}}
             </div>
-
             {% endfor %}
-
         {% endif %}
-
     </div>
 
     <!-- Input -->
     <div class="chat-input">
-
-        <form id="chat-form" action="/chatbot" method="POST">
-
+        <form id="chat-form">
             <input
                 id="chat-input"
                 type="text"
@@ -108,15 +82,11 @@
                 placeholder="Tanya apapun tentang HIMATIF..."
                 autocomplete="off"
             >
-
             <button type="submit">
                 ➜
             </button>
-
         </form>
-
     </div>
-
 </div>
 
 <script>
