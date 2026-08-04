@@ -41,7 +41,6 @@
 
     <!-- Chat Area -->
     <div class="chat-history">
-        {% if riwayat_chat|length == 0 %}
         <div class="welcome-screen">
             <div class="fox-logo">
                 🦊
@@ -63,14 +62,15 @@
                 </button>
             </div>
         </div>
-        {% else %}
-            {% for pesan in riwayat_chat %}
-            <div class="message {{pesan['sender']}}">
-                {{pesan["text"]}}
-            </div>
-            {% endfor %}
-        {% endif %}
+        <div id="messages">
+          {% for pesan in riwayat_chat %}
+          <div class="message {{pesan['sender']}}">
+        {{pesan["text"]}}
     </div>
+            {% endfor %}
+
+          </div>
+        </div>
 
     <!-- Input -->
     <div class="chat-input">

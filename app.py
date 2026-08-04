@@ -20,20 +20,13 @@ if not knowledge_exists():
 def home():
   return render_template("home.html")
 
-@app.route("/chatbot", methods=["GET", "POST"])
-  
+@app.route("/chatbot")
 def chatbot():
-  if request.method == "POST":
-    message = request.form.get("pesan", "")
-    if message != "":
-      history = ambil_history()
-      reply = get_reply(message, history)
-      tambah_message("Rio", message)
-      tambah_message("AI", reply)
-      return redirect("/chatbot")
-    else:
-      return redirect("/chatbot")
-  return render_template("chatbot.html", nama="RIO", riwayat_chat=ambil_history())
+  return render_template(
+    "chatbot.html",
+    nama="RIO",
+    riwayat_chat=ambil_history()
+  )
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
