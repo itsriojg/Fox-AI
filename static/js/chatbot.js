@@ -14,6 +14,7 @@ suggestions.forEach((button)=>{
 function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
   buatBubble("Rio", pesan);
+  input.value = "";
   const typing = tampilkanTyping();
   fetch("/api/chat", {
       method: "POST",
@@ -25,7 +26,6 @@ function kirimPesan(pesan){
     .then((data) => {
       typing.remove()
       buatBubble("AI", data.reply);
-      input.value = "";
     });
 }
 
@@ -44,7 +44,9 @@ function buatBubble(sender, text){
   bubble.className = "message " + sender;
   bubble.textContent = text;
   messages.appendChild(bubble);
-}
+
+  scrollkebawah();
+  }
 
 if(messages.children.length > 0){
   welcomeScreen.style.display = "none";
@@ -53,7 +55,25 @@ if(messages.children.length > 0){
 function tampilkanTyping(){
   const typing = document.createElement("div");
   typing.className = "message AI typing";
-  typing.textContent = "AI sedang mengetik...";
+  typing.innerHTML = `
+    <div class="typing-triangle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  `;
   messages.appendChild(typing);
+  scrollkebawah();
   return typing;
+}
+
+function scrollkebawah(){
+  const chatHistory = document.querySelector(".chat-history");
+
+  requestAnimationFrame(() => {
+    chatHistory.scrollTo({
+      top: chatHistory.scrollHeight,
+      behavior: "smooth"
+    });
+  });
 }

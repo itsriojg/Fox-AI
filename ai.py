@@ -10,7 +10,7 @@ api_key = os.getenv("GROQ_API_KEY"),
 base_url = os.getenv("GROQ_BASE_URL")
 )
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 
 def get_ai_reply(system_prompt, prompt):
   try:
