@@ -1,5 +1,5 @@
 from ai import get_ai_reply
-from prompt import SYSTEM_PROMPT
+from prompt import system_prompt
 from embedding import get_embedding
 from vector_db import load_index, cari_embedding, rebuild_faiss
 from database import get_chunk_by_id
@@ -29,17 +29,16 @@ def get_reply(message, history):
   for chat in history[-10:]:
     history_text += f"{chat['sender']}: {chat['text']}\n"
   
-  prompt = f"""{SYSTEM_PROMPT}
-
-Knowledge:
+  prompt = f"""
+Berikut adalah ilmu dan sumber data:
 {knowledge}
 
-Riwayat obrolan:
+Berikut adalah riwayat obrolan:
 {history_text}
 
-Pertanyaan:
+Ini adalah pertanyaan user:
 {message}
 """
   
-  reply = get_ai_reply(prompt)
+  reply = get_ai_reply(system_prompt, prompt)
   return reply

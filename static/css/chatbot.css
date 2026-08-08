@@ -129,6 +129,12 @@ body{
     gap:14px;
 }
 
+#messages{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
 .chat-input{
     padding:20px;
     background:var(--bg-card);

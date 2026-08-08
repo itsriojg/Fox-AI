@@ -12,6 +12,9 @@ suggestions.forEach((button)=>{
 });
 
 function kirimPesan(pesan){
+  welcomeScreen.style.display = "none";
+  buatBubble("Rio", pesan);
+  const typing = tampilkanTyping();
   fetch("/api/chat", {
       method: "POST",
       body: new URLSearchParams({
@@ -20,8 +23,7 @@ function kirimPesan(pesan){
   })
     .then((response) => response.json())
     .then((data) => {
-      welcomeScreen.style.display = "none";
-      buatBubble("Rio", pesan);
+      typing.remove()
       buatBubble("AI", data.reply);
       input.value = "";
     });
@@ -46,4 +48,12 @@ function buatBubble(sender, text){
 
 if(messages.children.length > 0){
   welcomeScreen.style.display = "none";
+}
+
+function tampilkanTyping(){
+  const typing = document.createElement("div");
+  typing.className = "message AI typing";
+  typing.textContent = "AI sedang mengetik...";
+  messages.appendChild(typing);
+  return typing;
 }

@@ -10,15 +10,19 @@ api_key = os.getenv("GROQ_API_KEY"),
 base_url = os.getenv("GROQ_BASE_URL")
 )
 
-MODEL = "llama-3.1-8b-instant"
+MODEL = "llama-3.3-70b-versatile"
 
-def get_ai_reply(prompt):
+def get_ai_reply(system_prompt, prompt):
   try:
     start = time.time()
 
     response = client.chat.completions.create(
     model=MODEL,
     messages=[
+      {
+       "role": "system",
+       "content": system_prompt
+      },
       {
        "role": "user",
        "content": prompt
