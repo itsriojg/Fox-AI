@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
     <title>Fox AI</title>
 
@@ -19,11 +19,11 @@
         </button>
         <div class="header-info">
             <div class="header-logo">
-                🦊
+              <img src="/static/assets/fox-logo.png" alt="Fox AI Logo">
             </div>
             <div class="header-text">
                 <h2>Fox AI</h2>
-                <p>AI Assistant HIMATIF</p>
+                <p>AI Assistant</p>
             </div>
         </div>
 
@@ -38,30 +38,24 @@
         </button>
         </form>
     </div>
-
+    <div class="header-glow"></div>
     <!-- Chat Area -->
     <div class="chat-history">
-        <div class="welcome-screen">
-            <div class="fox-logo">
-                🦊
-            </div>
-            <h1>Welcome to HIMATIF AI</h1>
-            <p>AI Assistant HIMATIF</p>
-            <div class="suggestions">
-                <button type="button" class="suggestion-btn">
-                    Apa itu HIMATIF?
-                </button>
-                <button type="button" class="suggestion-btn">
-                    Divisi apa saja di HIMATIF?
-                </button>
-                <button type="button" class="suggestion-btn">
-                    Siapa ketua HIMATIF saat ini?
-                </button>
-                <button type="button" class="suggestion-btn">
-                    Bagaimana cara bergabung?
-                </button>
-            </div>
-        </div>
+    <div class="welcome-screen">
+      <div class="fox-logo">
+        <img src="/static/assets/fox-logo.png" alt="Fox AI Logo">
+      </div>
+      <div class="welcome-text">
+        <h1>Welcome to Fox AI</h1>
+        <p>Your AI Assistant</p>
+      </div>
+      <div class="suggestions">
+        <button type="button" class="suggestion-btn">Suggestion 1?</button>
+        <button type="button" class="suggestion-btn">Suggestion 2?</button>
+        <button type="button" class="suggestion-btn">Suggestion 3?</button>
+        <button type="button" class="suggestion-btn">Suggestion 4?</button>
+      </div>
+    </div>
         <div id="messages">
           {% for pesan in riwayat_chat %}
           <div class="message {{pesan['sender']}}">
@@ -79,7 +73,7 @@
                 id="chat-input"
                 type="text"
                 name="pesan"
-                placeholder="Tanya apapun tentang HIMATIF..."
+                placeholder="Tanya apapun pada Fox AI..."
                 autocomplete="off"
             >
             <button type="submit">

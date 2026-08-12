@@ -2,6 +2,7 @@ const messages = document.querySelector("#messages");
 const welcomeScreen = document.querySelector(".welcome-screen");
 const input = document.querySelector("#chat-input");
 const form = document.querySelector("#chat-form");
+const sendButton = form.querySelector("button[type='submit']");
 const suggestions = document.querySelectorAll(".suggestion-btn");
 
 suggestions.forEach((button)=>{
@@ -11,10 +12,26 @@ suggestions.forEach((button)=>{
   });
 });
 
+function updateSendButton(){
+  const isEmpty = input.value.trim() === "";
+  sendButton.disabled = isEmpty || sendButton.dataset.sending === "true";
+}
+
+function setSending(isSending){
+  sendButton.dataset.sending = isSending;
+  input.disabled = isSending;
+  suggestions.forEach((button) => button.disabled = isSending);
+  updateSendButton();
+}
+
+input.addEventListener("input", updateSendButton);
+updateSendButton();
+
 function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
   buatBubble("Rio", pesan);
   input.value = "";
+  setSending(true);
   const typing = tampilkanTyping();
   fetch("/api/chat", {
       method: "POST",
@@ -26,6 +43,13 @@ function kirimPesan(pesan){
     .then((data) => {
       typing.remove()
       buatBubble("AI", data.reply);
+    })
+    .catch((error) => {
+      typing.remove();
+      console.error(error);
+    })
+    .finally(() => {
+      setSending(false);
     });
 }
 
@@ -54,13 +78,16 @@ if(messages.children.length > 0){
 
 function tampilkanTyping(){
   const typing = document.createElement("div");
-  typing.className = "message AI typing";
+  typing.className = "typing-wrapper";
   typing.innerHTML = `
-    <div class="typing-triangle">
-      <span></span>
-      <span></span>
-      <span></span>
+    <div class="typing-loader" role="status" aria-live="polite" aria-label="Chatbot sedang mengetik">
+    <div class="orbs" aria-hidden="true">
+      <span class="orb"></span>
+      <span class="orb"></span>
+      <span class="orb"></span>
     </div>
+    <span class="label">Thinking...</span>
+  </div>
   `;
   messages.appendChild(typing);
   scrollkebawah();
