@@ -32,10 +32,10 @@
             </span>
             <span>Online</span>
         </div>
-        <form action="/clear" method="POST">
-        <button class="clear-button" type="submit">
+        <form id="clear-form">
+          <button class="clear-button" type="submit" id="clear-button" {% if not riwayat_chat %}disabled{% endif %}>
             🗑
-        </button>
+          </button>
         </form>
     </div>
     <div class="header-glow"></div>

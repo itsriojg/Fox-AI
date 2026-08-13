@@ -4,6 +4,7 @@ const input = document.querySelector("#chat-input");
 const form = document.querySelector("#chat-form");
 const sendButton = form.querySelector("button[type='submit']");
 const suggestions = document.querySelectorAll(".suggestion-btn");
+const clearForm = document.querySelector("#clear-form");
 
 suggestions.forEach((button)=>{
   button.addEventListener("click", ()=>{
@@ -63,18 +64,39 @@ form.addEventListener("submit", (event) => {
     console.log(pesan);
     });
 
+const clearButton = document.querySelector("#clear-button");
+
+function updateClearButton(){
+  clearButton.disabled = messages.children.length === 0;
+}
+
+clearForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  fetch("/clear", { method: "POST" })
+    .then(() => {
+      messages.innerHTML = "";
+      welcomeScreen.style.display = "";
+      input.value = "";
+      setSending(false);
+      updateClearButton();
+    })
+    .catch((error) => console.error(error));
+});
+
 function buatBubble(sender, text){
   const bubble = document.createElement("div");
   bubble.className = "message " + sender;
   bubble.textContent = text;
   messages.appendChild(bubble);
 
+  updateClearButton();
   scrollkebawah();
   }
 
 if(messages.children.length > 0){
   welcomeScreen.style.display = "none";
 }
+updateClearButton();
 
 function tampilkanTyping(){
   const typing = document.createElement("div");

@@ -31,6 +31,40 @@
   box-sizing: border-box;
 }
 
+*{
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input{
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus,
+.suggestion-btn:focus,
+.clear-button:focus,
+.back-button:focus,
+.chat-input button:focus{
+  outline: none;
+}
+
+body{
+  font-family: "Poppins", sans-serif;
+  background:
+      radial-gradient(ellipse 600px 400px at 10% 0%, rgba(94,234,255,.07) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 400px at 90% 100%, rgba(138,255,201,.06) 0%, transparent 60%),
+      var(--bg-main);
+  color: var(--text);
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  /* BUG FIX #2: lock text/image selection everywhere by default */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .chat-container{
     display:flex;
     flex-direction:column;
@@ -103,6 +137,10 @@
     width:100%;
     height:100%;
     object-fit:contain;
+    /* BUG FIX #2: kill long-press "copy/save image" context menu */
+    pointer-events:none;
+    -webkit-user-drag:none;
+    -webkit-touch-callout:none;
 }
 
 .header-text{
@@ -177,17 +215,14 @@
     color:#ff9b9b;
 }
 
-body{
-  font-family: "Poppins", sans-serif;
-  background:
-      radial-gradient(ellipse 600px 400px at 10% 0%, rgba(94,234,255,.07) 0%, transparent 60%),
-      radial-gradient(ellipse 600px 400px at 90% 100%, rgba(138,255,201,.06) 0%, transparent 60%),
-      var(--bg-main);
-  color: var(--text);
-  height: 100dvh;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+.clear-button:disabled{
+    color:rgba(232,246,255,.15);
+    cursor:not-allowed;
+}
+
+.clear-button:disabled:hover{
+    background:transparent;
+    color:rgba(232,246,255,.15);
 }
 
 .welcome-screen{
@@ -211,6 +246,10 @@ body{
     width: 180px;
     height: 180px;
     object-fit: contain;
+    /* BUG FIX #2: kill long-press "copy/save image" context menu */
+    pointer-events:none;
+    -webkit-user-drag:none;
+    -webkit-touch-callout:none;
 }
 
 @keyframes logoIntro{
@@ -301,6 +340,11 @@ body{
     font-size:15px;
     line-height:1.5;
     animation:messageShow .4s cubic-bezier(.22, 1, .36, 1);
+    /* BUG FIX #2: this is the ONLY thing allowed to be selected/copied */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 .message:hover{
@@ -396,6 +440,9 @@ body{
     background:transparent;
     color:#e8f6ff;
     font-size:15px;
+    /* input value should still be selectable for editing */
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .chat-input input::placeholder{
