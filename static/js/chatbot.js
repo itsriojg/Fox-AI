@@ -22,6 +22,7 @@ function setSending(isSending){
   sendButton.dataset.sending = isSending;
   input.disabled = isSending;
   suggestions.forEach((button) => button.disabled = isSending);
+  clearButton.disabled = isSending || messages.children.length === 0;
   updateSendButton();
 }
 
