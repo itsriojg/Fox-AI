@@ -5,6 +5,15 @@ const form = document.querySelector("#chat-form");
 const sendButton = form.querySelector("button[type='submit']");
 const suggestions = document.querySelectorAll(".suggestion-btn");
 const clearForm = document.querySelector("#clear-form");
+const backButton = document.querySelector("#back-button");
+
+backButton.addEventListener("click", () => {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "/";
+  }
+});
 
 suggestions.forEach((button)=>{
   button.addEventListener("click", ()=>{
