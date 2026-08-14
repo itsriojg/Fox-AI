@@ -1,13 +1,78 @@
+:root{
+    --bg-main: #060d1c;
+    --accent-a: #6ef0ff;
+    --accent-b: #8af7c8;
+    --fox: #ff8c28;
+    --text: #e8f6ff;
+    --text-secondary: rgba(232,246,255,.55);
+}
+
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body{
+    height:100%;
+    overflow:hidden;
 }
 
 body{
     font-family:"Poppins", sans-serif;
-    background:#071022;
-    color:white;
+    background:
+        radial-gradient(ellipse 600px 400px at 10% 0%, rgba(94,234,255,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 400px at 90% 100%, rgba(138,255,201,.06) 0%, transparent 60%),
+        var(--bg-main);
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.hero{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:10px;
+    padding:24px;
+}
+
+.hero-logo{
+    width:96px;
+    height:96px;
+    object-fit:contain;
+    margin-bottom:8px;
+    opacity:0;
+    animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.hero h1{
+    font-size:26px;
+    font-weight:700;
+    background:linear-gradient(135deg, var(--accent-a), var(--accent-b));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    opacity:0;
+    animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay:.15s;
+}
+
+.hero p{
+    font-size:14px;
+    color: var(--text-secondary);
+    max-width:280px;
+    opacity:0;
+    animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay:.3s;
+}
+
+@keyframes heroIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
 }
 
 .fox-floating{
@@ -20,10 +85,17 @@ body{
     overflow: hidden;
     display: block;
     transform: scale(1.20);
-    -webkit-tap-highlight-color: transparent;
     outline: none;
+    box-shadow:
+        0 0 8px rgba(255,140,40,.7),
+        0 0 20px rgba(255,140,40,.4);
+    animation: fabPulse 2.4s ease-in-out infinite;
 }
 
+@keyframes fabPulse{
+    0%, 100%{ box-shadow: 0 0 8px rgba(255,140,40,.7), 0 0 20px rgba(255,140,40,.4); }
+    50%{ box-shadow: 0 0 12px rgba(255,140,40,.9), 0 0 30px rgba(255,140,40,.6); }
+}
 
 .fox-floating,
 .fox-floating:hover,
@@ -32,9 +104,7 @@ body{
 .fox-floating:active{
     outline: none !important;
     border: none !important;
-    box-shadow: none !important;
     background: transparent !important;
-    -webkit-tap-highlight-color: transparent !important;
 }
 
 .fox-floating img{
@@ -46,44 +116,11 @@ body{
     transform: translate(-13%, -13%);
 }
 
-#fox-button{
-    width:48px;
-    height:48px;
-    border:1px solid rgba(255,140,40,.8);
-    border-radius:50%;
-    background:#101827;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:
-        0 0 8px rgba(255,140,40,.8),
-        0 0 18px rgba(255,140,40,.55),
-        0 0 32px rgba(255,140,40,.3);
-    transition:
-        transform .25s ease,
-        box-shadow .25s ease;
-}
-
-#fox-button:hover{
-    transform:scale(1.08);
-    box-shadow:
-        0 0 10px rgba(255,140,40,1),
-        0 0 24px rgba(255,140,40,.75),
-        0 0 40px rgba(255,140,40,.45);
-}
-
-#fox-button:active{
-    transform:scale(.94);
-}
-
 .fox-tooltip{
     position:absolute;
     left:60px;
     bottom:50%;
-    transform:
-        translateY(50%)
-        translateX(-6px);
+    transform: translateY(50%) translateX(-6px);
     padding:8px 12px;
     border-radius:8px;
     background:#101827;
@@ -93,41 +130,30 @@ body{
     border:1px solid rgba(255,255,255,.08);
     opacity:0;
     visibility:hidden;
-    transition:
-        opacity .2s ease,
-        transform .2s ease;
+    transition: opacity .2s ease, transform .2s ease;
 }
 
 .fox-floating:hover .fox-tooltip{
     opacity:1;
     visibility:visible;
-    transform:
-        translateY(50%)
-        translateX(0);
+    transform: translateY(50%) translateX(0);
 }
 
-.fox-logo{
-    width:30px;
-    height:30px;
-
-    fill:none;
-    stroke:#ff8c28;
-    stroke-width:2.2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-
-    filter:
-        drop-shadow(0 0 3px rgba(255,140,40,.9))
-        drop-shadow(0 0 8px rgba(255,140,40,.65));
-
-    transition:
-        transform .25s ease,
-        filter .25s ease;
+.circle-overlay{
+    position: fixed;
+    inset: 0;
+    background: var(--bg-main);
+    z-index: 9999;
+    pointer-events: none;
+    clip-path: circle(var(--r, 0px) at var(--ox, 50%) var(--oy, 50%));
+    transition: clip-path .9s cubic-bezier(.65, 0, .35, 1);
 }
-#fox-button:hover .fox-logo{
-    transform:scale(1.08);
-    filter:
-        drop-shadow(0 0 4px rgba(255,140,40,1))
-        drop-shadow(0 0 10px rgba(255,140,40,.85))
-        drop-shadow(0 0 18px rgba(255,140,40,.5));
+.circle-overlay.no-transition{
+    transition: none;
+}
+
+@media (prefers-reduced-motion: reduce){
+    .hero-logo, .hero h1, .hero p{ animation:none; opacity:1; }
+    .fox-floating{ animation:none; }
+    .circle-overlay{ transition:none; }
 }

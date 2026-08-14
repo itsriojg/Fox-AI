@@ -9,14 +9,35 @@
 
 <body>
 
-  <h3>Selamat datang di halaman utama!!</h3>
+  <div class="circle-overlay" id="circleOverlay"></div>
+  <script>
+    (function(){
+      var phase = sessionStorage.getItem('foxTransitionPhase');
+      if (phase !== 'toHome') return;
+      var x = parseFloat(sessionStorage.getItem('foxOriginX'));
+      var y = parseFloat(sessionStorage.getItem('foxOriginY'));
+      if (isNaN(x) || isNaN(y)) return;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+      var root = document.documentElement;
+      root.style.setProperty('--ox', x + 'px');
+      root.style.setProperty('--oy', y + 'px');
+      root.style.setProperty('--r', r + 'px');
+      document.getElementById('circleOverlay').classList.add('no-transition');
+    })();
+  </script>
 
-  <a href="/chatbot" class="fox-floating">
-    <img
-        src="/static/assets/floating-button-fox-ai.png"
-        alt="Fox AI"
-    >
+  <div class="hero">
+    <img src="/static/assets/fox-logo.png" alt="Fox AI" class="hero-logo">
+    <h1>Selamat datang di halaman utama!!</h1>
+    <p>Ketuk ikon fox di kiri bawah buat mulai ngobrol sama Fox AI.</p>
+  </div>
+
+  <a href="/chatbot" class="fox-floating" id="foxFab">
+    <img src="/static/assets/floating-button-fox-ai.png" alt="Fox AI">
     <span class="fox-tooltip">Tanya Fox AI</span>
   </a>
+
+  <script src="/static/js/home.js"></script>
 </body>
 </html>

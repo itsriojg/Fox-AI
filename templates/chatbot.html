@@ -9,7 +9,23 @@
     <link rel="stylesheet" href="/static/css/chatbot.css">
 </head>
 <body>
-
+<div class="circle-overlay" id="circleOverlay"></div>
+<script>
+  (function(){
+    var phase = sessionStorage.getItem('foxTransitionPhase');
+    if (phase !== 'toChat') return;
+    var x = parseFloat(sessionStorage.getItem('foxOriginX'));
+    var y = parseFloat(sessionStorage.getItem('foxOriginY'));
+    if (isNaN(x) || isNaN(y)) return;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+    var root = document.documentElement;
+    root.style.setProperty('--ox', x + 'px');
+    root.style.setProperty('--oy', y + 'px');
+    root.style.setProperty('--r', r + 'px');
+    document.getElementById('circleOverlay').classList.add('no-transition');
+  })();
+</script>
 <div class="chat-container">
 
     <!-- Header -->

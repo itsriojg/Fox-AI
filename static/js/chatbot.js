@@ -6,13 +6,53 @@ const sendButton = form.querySelector("button[type='submit']");
 const suggestions = document.querySelectorAll(".suggestion-btn");
 const clearForm = document.querySelector("#clear-form");
 const backButton = document.querySelector("#back-button");
+const overlay = document.querySelector("#circleOverlay");
+const root = document.documentElement;
+
+function maxRadiusFrom(x, y){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const dx = Math.max(x, vw - x);
+  const dy = Math.max(y, vh - y);
+  return Math.hypot(dx, dy);
+}
+
+(function playEntranceIfNeeded(){
+  const phase = sessionStorage.getItem('foxTransitionPhase');
+  if (phase !== 'toChat') return;
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove('no-transition');
+    requestAnimationFrame(() => {
+      root.style.setProperty('--r', '0px');
+    });
+  });
+
+  sessionStorage.removeItem('foxTransitionPhase');
+})();
 
 backButton.addEventListener("click", () => {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
+  const x = parseFloat(sessionStorage.getItem('foxOriginX'));
+  const y = parseFloat(sessionStorage.getItem('foxOriginY'));
+
+  // gak ada origin tersimpen (misal chatbot dibuka langsung lewat URL)
+  // -> gak ada yang di-reverse, langsung pindah biasa
+  if (Number.isNaN(x) || Number.isNaN(y)){
     window.location.href = "/";
+    return;
   }
+
+  root.style.setProperty('--ox', x + 'px');
+  root.style.setProperty('--oy', y + 'px');
+  overlay.classList.remove('no-transition');
+  root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
+
+  sessionStorage.setItem('foxTransitionPhase', 'toHome');
+
+  overlay.addEventListener('transitionend', function onEnd(e){
+    if (e.propertyName !== 'clip-path') return;
+    overlay.removeEventListener('transitionend', onEnd);
+    window.location.href = "/";
+  });
 });
 
 suggestions.forEach((button)=>{

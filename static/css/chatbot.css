@@ -608,3 +608,20 @@ body{
         opacity:1;
     }
 }
+
+.circle-overlay{
+    position: fixed;
+    inset: 0;
+    background: var(--bg-main);
+    z-index: 9999;
+    pointer-events: none;
+    clip-path: circle(var(--r, 0px) at var(--ox, 50%) var(--oy, 50%));
+    transition: clip-path .9s cubic-bezier(.65, 0, .35, 1);
+}
+.circle-overlay.no-transition{
+    transition: none;
+}
+
+@media (prefers-reduced-motion: reduce){
+    .circle-overlay{ transition:none; }
+}
