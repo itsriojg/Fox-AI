@@ -58,7 +58,9 @@ def insert_knowledge(source, chunk):
     VALUES(?,?)""", (source, chunk)
     )
   conn.commit()
+  id_baru = cursor.lastrowid
   conn.close()
+  return id_baru
   
 def take_all_chunk():
   conn = sqlite3.connect("database.db")

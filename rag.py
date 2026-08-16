@@ -1,7 +1,8 @@
 from pypdf import PdfReader
 from knowledge import get_path_pdf_files
 from database import clear_knowledge, insert_knowledge
-from vector_db import rebuild_faiss
+from vector_db import simpan_index
+from embedding import get_embedding
 import os
 import re
 
@@ -50,14 +51,26 @@ def clean_text(text):
   return text
   
 def build_knowledge():
-  clear_knowledge()
   paths = get_path_pdf_files()
+
+  sources = []
+  chunks = []
   for path in paths:
     text = read_pdf(path)
     text = clean_text(text)
-    chunks = make_chunks(text)
     source = os.path.splitext(os.path.basename(path))[0]
-    for chunk in chunks:
-      insert_knowledge(source, chunk)
-  rebuild_faiss()
+    for chunk in make_chunks(text):
+      sources.append(source)
+      chunks.append(chunk)
+
+  vectors = []
+  for chunk in chunks:
+    vectors.append(get_embedding(chunk))
+
+  clear_knowledge()
+  ids = []
+  for i, chunk in enumerate(chunks):
+    ids.append(insert_knowledge(sources[i], chunk))
+
+  simpan_index(ids, vectors)
   

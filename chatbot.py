@@ -12,7 +12,10 @@ else:
     index = load_index()
 
 def get_reply(message, history):
-  query_embedding = get_embedding(message)
+  try:
+    query_embedding = get_embedding(message)
+  except RuntimeError:
+    return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti."
   context = []
   scores, indexes = cari_embedding(index, query_embedding, top_k=5)
   for id in indexes[0]:
