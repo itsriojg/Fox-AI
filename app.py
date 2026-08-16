@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
 from database import build_table_history, build_table_knowledge, knowledge_exists
@@ -18,8 +18,12 @@ if not knowledge_exists():
 
 @app.route("/")
 def home():
-  return render_template("home.html")
+  return send_from_directory("home-react/dist", "index.html")
 
+@app.route("/react-assets/<path:filename>")
+def react_assets(filename):
+    return send_from_directory("home-react/dist", filename)
+  
 @app.route("/chatbot")
 def chatbot():
   return render_template(
