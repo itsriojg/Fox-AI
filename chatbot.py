@@ -18,7 +18,7 @@ def get_reply(message, history):
   for id in indexes[0]:
     if id == -1:
       continue
-    chunk = get_chunk_by_id(int(id)+1)
+    chunk = get_chunk_by_id(int(id))
     if chunk is not None:
       context.append(chunk)
 
