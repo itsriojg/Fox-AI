@@ -11,6 +11,7 @@ base_url = os.getenv("GROQ_BASE_URL")
 )
 
 MODEL = "openai/gpt-oss-120b"
+TIMEOUT = 30
 
 def get_ai_reply(system_prompt, prompt):
   try:
@@ -28,7 +29,7 @@ def get_ai_reply(system_prompt, prompt):
        "content": prompt
       }
     ],
-    timeout=10
+    timeout=TIMEOUT
   )
     end = time.time()
     print(f"Model : {MODEL}")

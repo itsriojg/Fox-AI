@@ -1,107 +1,74 @@
 import sqlite3
+from contextlib import closing
+
+DB_FILE = "database.db"
+TIMEOUT = 10
 
 def build_table_history():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute(
-    """CREATE TABLE IF NOT EXISTS history(
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute(
+      """CREATE TABLE IF NOT EXISTS history(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sender TEXT,
       text TEXT
       )"""
     )
-  conn.commit()
-  conn.close()
-  
+
 def insert_history(sender, text):
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute(
-    """INSERT INTO history(sender, text)
-    VALUES(?,?)""", (sender, text)
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute(
+      """INSERT INTO history(sender, text)
+      VALUES(?,?)""", (sender, text)
     )
-  conn.commit()
-  conn.close()
-  
+
 def get_history():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute("SELECT*FROM history")
-  results = cursor.fetchall()
-  conn.close()
-  return results
-  
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
+    return conn.execute("SELECT * FROM history").fetchall()
+
 def clear_history():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute("DELETE FROM history")
-  conn.commit()
-  conn.close()
-  
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute("DELETE FROM history")
+
 def build_table_knowledge():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute(
-    """CREATE TABLE IF NOT EXISTS knowledge(id INTEGER PRIMARY KEY AUTOINCREMENT, 
-    source TEXT NOT NULL, 
-    chunk TEXT NOT NULL
-    )"""
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute(
+      """CREATE TABLE IF NOT EXISTS knowledge(id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      source TEXT NOT NULL, 
+      chunk TEXT NOT NULL
+      )"""
     )
-  conn.commit()
-  conn.close()
-  
+
 def insert_knowledge(source, chunk):
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute(
-    """INSERT INTO knowledge(source, chunk) 
-    VALUES(?,?)""", (source, chunk)
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    cursor = conn.execute(
+      """INSERT INTO knowledge(source, chunk) 
+      VALUES(?,?)""", (source, chunk)
     )
-  conn.commit()
-  id_baru = cursor.lastrowid
-  conn.close()
-  return id_baru
-  
+    return cursor.lastrowid
+
 def take_all_chunk():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute("""
-    SELECT id, source, chunk
-    FROM knowledge
-    ORDER BY id;
-    """)
-  chunks = cursor.fetchall()
-  conn.close()
-  return chunks
-  
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
+    return conn.execute("""
+      SELECT id, source, chunk
+      FROM knowledge
+      ORDER BY id;
+      """).fetchall()
+
 def get_chunk_by_id(id):
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute("""
-    SELECT chunk
-    FROM knowledge
-    WHERE id = ?""", (id,))
-  chunk = cursor.fetchone()
-  if chunk is None:
-    conn.close()
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
+    row = conn.execute("""
+      SELECT chunk
+      FROM knowledge
+      WHERE id = ?""", (id,)).fetchone()
+  if row is None:
     return None
-    
-  conn.close()
-  return chunk[0]
-  
+  return row[0]
+
 def clear_knowledge():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute(
-    "DELETE FROM knowledge"
-    )
-  conn.commit()
-  conn.close()
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute("DELETE FROM knowledge")
 
 def knowledge_exists():
-  conn = sqlite3.connect("database.db")
-  cursor = conn.cursor()
-  cursor.execute("SELECT COUNT(*) FROM knowledge")
-  jumlah = cursor.fetchone()[0]
-  conn.close()
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
+    jumlah = conn.execute("SELECT COUNT(*) FROM knowledge").fetchone()[0]
   return jumlah > 0
