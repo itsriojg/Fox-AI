@@ -5,3 +5,4 @@ python-dotenv==1.2.2
 numpy==2.2.6
 faiss-cpu==1.14.3
 openai==2.53.0
+gunicorn==23.0.0

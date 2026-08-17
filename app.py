@@ -25,6 +25,12 @@ def get_user_id():
     session["user_id"] = secrets.token_hex(16)
   return session["user_id"]
 
+@app.route("/health")
+def health():
+  return jsonify({
+    "status": "ok"
+  })
+
 @app.route("/")
 def home():
   return send_from_directory("home-react/dist", "index.html")
