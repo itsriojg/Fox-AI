@@ -14,7 +14,10 @@ app.secret_key = os.getenv("SECRET_KEY")
 build_table_history()
 build_table_knowledge()
 if not knowledge_exists():
-  build_knowledge()
+  try:
+    build_knowledge()
+  except Exception as e:
+    print(f"[ERROR] Gagal membangun knowledge: {e}")
 
 @app.route("/")
 def home():
@@ -53,4 +56,8 @@ def clear_history():
   hapus_history()
   return redirect("/chatbot")
 
-app.run()
+if __name__ == "__main__":
+  app.run(
+    host=os.getenv("HOST", "0.0.0.0"),
+    port=int(os.getenv("PORT", "5000"))
+  )

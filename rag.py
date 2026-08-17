@@ -1,7 +1,7 @@
 from pypdf import PdfReader
 from knowledge import get_path_pdf_files
 from database import clear_knowledge, insert_knowledge
-from vector_db import simpan_index
+from vector_db import simpan_index, rebuild_faiss
 from embedding import get_embedding
 import os
 import re
@@ -52,25 +52,49 @@ def clean_text(text):
   
 def build_knowledge():
   paths = get_path_pdf_files()
+  if not paths:
+    print("[WARN] Tidak ada file PDF untuk dibangun knowledge")
+    return
 
   sources = []
   chunks = []
   for path in paths:
-    text = read_pdf(path)
+    try:
+      text = read_pdf(path)
+    except Exception as e:
+      print(f"[WARN] Gagal membaca PDF {path}: {e}")
+      continue
     text = clean_text(text)
+    if not text:
+      continue
     source = os.path.splitext(os.path.basename(path))[0]
     for chunk in make_chunks(text):
       sources.append(source)
       chunks.append(chunk)
 
-  vectors = []
-  for chunk in chunks:
-    vectors.append(get_embedding(chunk))
+  if not chunks:
+    print("[WARN] Tidak ada chunk yang berhasil dibuat")
+    return
 
-  clear_knowledge()
-  ids = []
-  for i, chunk in enumerate(chunks):
-    ids.append(insert_knowledge(sources[i], chunk))
+  try:
+    vectors = []
+    for chunk in chunks:
+      vectors.append(get_embedding(chunk))
+  except RuntimeError as e:
+    print(f"[ERROR] Gagal membuat embedding: {e}")
+    return
 
-  simpan_index(ids, vectors)
+  try:
+    clear_knowledge()
+    ids = []
+    for i, chunk in enumerate(chunks):
+      ids.append(insert_knowledge(sources[i], chunk))
+
+    try:
+      simpan_index(ids, vectors)
+    except Exception as e:
+      print(f"[ERROR] Gagal menyimpan index: {e}, mencoba rebuild dari database")
+      rebuild_faiss()
+  except Exception as e:
+    print(f"[ERROR] Gagal menyimpan knowledge: {e}")
   
