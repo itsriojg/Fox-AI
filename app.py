@@ -1,16 +1,17 @@
 import os
+import secrets
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, redirect, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory, session
 from chatbot import get_reply
 from history import tambah_message, ambil_history, hapus_history
 from database import build_table_history, build_table_knowledge, knowledge_exists
 from rag import build_knowledge
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
 build_table_history()
 build_table_knowledge()
 if not knowledge_exists():
@@ -18,6 +19,11 @@ if not knowledge_exists():
     build_knowledge()
   except Exception as e:
     print(f"[ERROR] Gagal membangun knowledge: {e}")
+
+def get_user_id():
+  if "user_id" not in session:
+    session["user_id"] = secrets.token_hex(16)
+  return session["user_id"]
 
 @app.route("/")
 def home():
@@ -32,7 +38,7 @@ def chatbot():
   return render_template(
     "chatbot.html",
     nama="RIO",
-    riwayat_chat=ambil_history()
+    riwayat_chat=ambil_history(get_user_id())
   )
 
 @app.route("/api/chat", methods=["POST"])
@@ -42,10 +48,11 @@ def api_chat():
     return jsonify({
       "error": "Pesan kosong"
     })
-  history = ambil_history()
+  user_id = get_user_id()
+  history = ambil_history(user_id)
   reply = get_reply(message, history)
-  tambah_message("Rio", message)
-  tambah_message("AI", reply)
+  tambah_message(user_id, "Rio", message)
+  tambah_message(user_id, "AI", reply)
 
   return jsonify({
     "reply": reply
@@ -53,7 +60,7 @@ def api_chat():
 
 @app.route("/clear", methods=["POST"])
 def clear_history():
-  hapus_history()
+  hapus_history(get_user_id())
   return redirect("/chatbot")
 
 if __name__ == "__main__":

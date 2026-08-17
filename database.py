@@ -9,25 +9,34 @@ def build_table_history():
     conn.execute(
       """CREATE TABLE IF NOT EXISTS history(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT,
       sender TEXT,
       text TEXT
       )"""
     )
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(history)").fetchall()]
+    if "user_id" not in columns:
+      conn.execute("ALTER TABLE history ADD COLUMN user_id TEXT")
 
-def insert_history(sender, text):
+def insert_history(user_id, sender, text):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
     conn.execute(
-      """INSERT INTO history(sender, text)
-      VALUES(?,?)""", (sender, text)
+      """INSERT INTO history(user_id, sender, text)
+      VALUES(?,?,?)""", (user_id, sender, text)
     )
 
-def get_history():
+def get_history(user_id):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
-    return conn.execute("SELECT * FROM history").fetchall()
+    return conn.execute(
+      """SELECT id, user_id, sender, text
+      FROM history
+      WHERE user_id = ?
+      ORDER BY id""", (user_id,)
+    ).fetchall()
 
-def clear_history():
+def clear_history(user_id):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
-    conn.execute("DELETE FROM history")
+    conn.execute("DELETE FROM history WHERE user_id = ?", (user_id,))
 
 def build_table_knowledge():
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
