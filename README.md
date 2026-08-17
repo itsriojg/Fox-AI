@@ -16,13 +16,13 @@ Fox AI adalah chatbot asisten berbasis RAG (Retrieval‑Augmented Generation) ya
 - Antarmuka transisi: animasi circle reveal antara halaman utama dan chatbot.
 - Indikator pengetikan: feedback "AI sedang mengetik" dengan auto-scroll.
 - Responsif: tampilan dioptimalkan untuk perangkat seluler dan desktop.
-- Siap untuk produksi: menggunakan gunicorn sebagai web server serta menyediakan health check endpoint.
+- Siap untuk produksi: menggunakan gunicorn dan waitress sebagai web server serta menyediakan health check endpoint.
 
 ---
 
 ## Teknologi
 
-- Backend: Python 3, Flask 3, gunicorn
+- Backend: Python 3, Flask 3, gunicorn, waitress
 - Retrieval / vektor: FAISS (IndexIDMap, cosine), numpy
 - Penyimpanan: SQLite (history + knowledge)
 - Embedding: Jina AI `jina-embeddings-v5-text-small` (1024-d)
@@ -74,10 +74,15 @@ Kendala yang diatasi:
 ## Platform yang Didukung
 
 Aplikasi dapat dijalankan di platform berikut selama dependensi terpenuhi:
-- Windows: Python 3.8+, Node.js (opsional untuk rebuild frontend)
-- macOS: Python 3.8+, Node.js
-- Linux: Python 3.8+, Node.js
-- Android: Termux (+ Andronix), Python, Node.js/npm, Git, editor opsional
+
+| Platform | Status | Catatan |
+|---|:---:|---|
+| Windows | ✅ Didukung | Mode pengembangan (`python app.py`); untuk produksi gunakan **waitress** atau WSL |
+| macOS | ✅ Didukung | Mode pengembangan dan produksi (gunicorn) |
+| Linux | ✅ Didukung | Mode pengembangan dan produksi (gunicorn) |
+| Android | ✅ Didukung | Termux (+ Andronix), Python, Node.js/npm, Git, editor opsional |
+
+Catatan penting: gunicorn tidak berjalan native di Windows karena bergantung pada fitur Unix (`fcntl`/`fork`). Oleh karena itu, waitress ditambahkan ke `requirements.txt` sebagai alternatif produksi di Windows.
 
 Kontributor dapat melakukan `git clone` dan mengikuti panduan instalasi untuk menyiapkan lingkungan pengembangan, termasuk pengembangan dari Android.
 
@@ -134,9 +139,14 @@ cd ..
 python app.py                   # akses http://localhost:5000
 ```
 
-5. Menjalankan dalam mode produksi
+5. Menjalankan dalam mode produksi (Linux / macOS)
 ```bash
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+6. Menjalankan dalam mode produksi (Windows)
+```bash
+waitress-serve --listen=0.0.0.0:5000 app:app
 ```
 
 Cek health endpoint:
@@ -166,11 +176,26 @@ Catatan: Pada mode pengembangan, `SECRET_KEY` akan digenerasi otomatis jika tida
 
 ## Pengujian
 
-Saat ini proyek belum memiliki test suite otomatis (mis. pytest atau unittest). Pengujian yang dilakukan bersifat manual end‑to‑end melalui HTTP, mencakup:
-- Pemeriksaan route utama (`/`, `/chatbot`, `/health`, `/api/chat`, `/clear`).
-- Verifikasi isolasi riwayat per pengguna dan operasi penghapusan riwayat.
-- Verifikasi alur RAG: query → retrieval → context → generation.
-- Verifikasi konsistensi FAISS dan proses rebuild index menggunakan `IndexIDMap`.
+Saat ini proyek belum memiliki test suite otomatis (mis. pytest atau unittest). Pengujian yang dilakukan bersifat manual end‑to‑end melalui HTTP. Berikut hasil pengujian terkini.
+
+### Isolasi Riwayat per Pengguna (5 Pengguna)
+
+| Skenario | Hasil |
+|---|---|
+| 5 pengguna masing‑masing mengirim 1 pesan | 5 user_id unik, 10 baris database (5 pesan + 5 balasan AI) |
+| Setiap pengguna membuka halaman chatbot | Hanya pesan miliknya sendiri yang tampil, tidak ada kebocoran antar‑pengguna |
+| Salah satu pengguna menghapus riwayat | Hanya riwayat milik pengguna tersebut yang hilang; pengguna lain tetap utuh |
+| Pengguna yang menghapus setelahnya | Riwayat kosong; pengguna lain tetap memiliki pesannya |
+
+Kesimpulan: isolasi riwayat antar‑pengguna berjalan sempurna. Setiap browser mendapatkan ID unik melalui session cookie, sehingga banyak pengguna tetap memiliki riwayat masing‑masing tanpa saling memengaruhi.
+
+### Responsif Perangkat Seluler vs Desktop
+
+Layout bersifat fleksibel (menggunakan `dvh`, flexbox, dan persentase). Pada layar kecil (`max-width: 768px`), bubble pesan menggunakan lebar 85% dengan ukuran font 14px; pada layar besar, bubble maksimal 75% dengan ukuran font 15px. Satu catatan yang sempat ditemukan: font Poppins dideklarasikan di CSS tetapi belum di‑load, sehingga sempat jatuh ke fallback `sans-serif`. Hal ini telah diperbaiki dengan menambahkan link Google Fonts di kedua halaman.
+
+### Kompatibilitas Sistem Operasi
+
+Seluruh dependency terverifikasi tersedia untuk macOS, Windows, dan Linux, termasuk `faiss-cpu` 1.14.3 yang menyediakan wheel untuk ketiga platform tersebut. Gunicorn terverifikasi tidak berjalan native di Windows, sehingga waitress ditambahkan sebagai alternatif produksi. Kode bebas dari hardcoded path OS dan menggunakan `os.path.join`, sehingga aman lintas platform.
 
 ---
 
@@ -182,7 +207,7 @@ Proyek ini telah berkembang melalui lebih dari 60 commit, mencakup:
 3. Pembangunan RAG pipeline end‑to‑end dan penguatan sinkronisasi ID antara SQLite dan FAISS.
 4. Frontend React: halaman utama dipindahkan ke React (Vite) dengan circle reveal transition ke chatbot.
 5. Multi‑user: riwayat chat dipisah per pengguna menggunakan session cookie.
-6. Persiapan untuk deployment produksi (gunicorn, health check, konfigurasi host/port via env).
+6. Persiapan untuk deployment produksi (gunicorn, waitress, health check, konfigurasi host/port via env).
 
 ---
 
