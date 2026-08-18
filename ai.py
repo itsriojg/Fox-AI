@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = OpenAI(
-api_key = os.getenv("GROQ_API_KEY"),
-base_url = os.getenv("GROQ_BASE_URL")
+    api_key=os.getenv("AI_API_KEY"),
+    base_url=os.getenv("AI_BASE_URL")
 )
 
-MODEL = "openai/gpt-oss-120b"
+MODEL = "GPT-120B-Fallback"
 TIMEOUT = 30
 
 def get_ai_reply(system_prompt, prompt):
