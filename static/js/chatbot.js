@@ -90,9 +90,13 @@ function kirimPesan(pesan){
       pesan: pesan
     })
   })
-    .then((response) => response.json())
-    .then((data) => {
+    .then((response) => response.json().then((data) => ({ response, data })))
+    .then(({ response, data }) => {
       typing.remove()
+      if (!response.ok) {
+        buatBubble("AI", data.error || "Terjadi kesalahan. Coba lagi.");
+        return;
+      }
       buatBubble("AI", data.reply);
     })
     .catch((error) => {
