@@ -47,13 +47,22 @@ button:focus,
   outline: none;
 }
 
+/* root canvas harus gelap juga — pas keyboard naik/turun viewport
+   di-resize dan area root yang belum ke-paint keliatan putih */
+html{
+  height:100%;
+  background:var(--bg-main);
+}
+
 body{
   font-family: "Poppins", sans-serif;
+  background-color: var(--bg-main);
   background:
       radial-gradient(ellipse 600px 400px at 10% 0%, rgba(175,157,128,.09) 0%, transparent 60%),
       radial-gradient(ellipse 600px 400px at 90% 100%, rgba(94,20,27,.13) 0%, transparent 60%),
       linear-gradient(to right, var(--bg-main), var(--bg-card));
   background-attachment: fixed;
+  overscroll-behavior:none;
   color: var(--text);
   height: 100dvh;
   overflow: hidden;
@@ -393,6 +402,7 @@ body{
     flex-direction:column;
     gap:14px;
     overflow-x:hidden;
+    overscroll-behavior:contain;
 }
 
 #messages{

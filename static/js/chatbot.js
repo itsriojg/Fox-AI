@@ -31,6 +31,9 @@ function maxRadiusFrom(x, y){
 })();
 
 backButton.addEventListener("click", () => {
+  // guard biar nggak dobel eksekusi kalau di-spam
+  if (backButton.dataset.leaving) return;
+
   const x = parseFloat(sessionStorage.getItem('foxOriginX'));
   const y = parseFloat(sessionStorage.getItem('foxOriginY'));
 
@@ -41,18 +44,40 @@ backButton.addEventListener("click", () => {
     return;
   }
 
+  backButton.dataset.leaving = "true";
+
+  // snap origin instan (tanpa transisi) dulu, baru expand di frame berikutnya
+  // biar origin nggak keburu ke-interpolasi (parity sama pola forward)
+  overlay.classList.add('no-transition');
   root.style.setProperty('--ox', x + 'px');
   root.style.setProperty('--oy', y + 'px');
+
+  overlay.getBoundingClientRect();
+
   overlay.classList.remove('no-transition');
-  root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
+
+  requestAnimationFrame(() => {
+    root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
+  });
 
   sessionStorage.setItem('foxTransitionPhase', 'toHome');
 
-  overlay.addEventListener('transitionend', function onEnd(e){
-    if (e.propertyName !== 'clip-path') return;
+  let done = false;
+  const goHome = () => {
+    if (done) return;
+    done = true;
     overlay.removeEventListener('transitionend', onEnd);
     window.location.href = "/";
-  });
+  };
+
+  function onEnd(e){
+    if (e.propertyName !== 'clip-path') return;
+    goHome();
+  }
+  overlay.addEventListener('transitionend', onEnd);
+
+  // fallback: transitionend bisa gak fire (prefers-reduced-motion, tab blur, dll)
+  setTimeout(goHome, 1000);
 });
 
 suggestions.forEach((button)=>{

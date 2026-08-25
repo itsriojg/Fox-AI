@@ -11,6 +11,27 @@
   </head>
   <body>
     <div id="root"></div>
+    <div class="circle-overlay" id="circleOverlay"></div>
+    <script>
+      // parity sama chatbot.html: cover layar sinkron sebelum first paint
+      // pas balik dari chatbot (phase 'toHome'), biar reverse-nya mulus tanpa jeda
+      (function(){
+        var overlay = document.getElementById('circleOverlay');
+        if (sessionStorage.getItem('foxTransitionPhase') !== 'toHome') return;
+
+        var x = parseFloat(sessionStorage.getItem('foxOriginX'));
+        var y = parseFloat(sessionStorage.getItem('foxOriginY'));
+        if (isNaN(x) || isNaN(y)) return;
+
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+        var root = document.documentElement;
+        root.style.setProperty('--ox', x + 'px');
+        root.style.setProperty('--oy', y + 'px');
+        root.style.setProperty('--r', r + 'px');
+        overlay.classList.add('no-transition');
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
