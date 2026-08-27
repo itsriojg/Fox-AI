@@ -5,6 +5,8 @@ from vector_db import load_index, cari_embedding, rebuild_faiss
 from database import get_chunk_by_id
 import os
 
+SIMILARITY_THRESHOLD = 0.35
+
 if os.path.exists("knowledge.index"):
     index = load_index()
 else:
@@ -18,14 +20,16 @@ def get_reply(message, history):
     return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti."
   context = []
   scores, indexes = cari_embedding(index, query_embedding, top_k=5)
-  for id in indexes[0]:
-    if id == -1:
-      continue
-    chunk = get_chunk_by_id(int(id))
-    if chunk is not None:
-      context.append(chunk)
+  if len(scores) > 0 and len(indexes) > 0:
+    for score, id in zip(scores[0], indexes[0]):
+      if id == -1:
+        continue
+      if score >= SIMILARITY_THRESHOLD:
+        chunk = get_chunk_by_id(int(id))
+        if chunk is not None:
+          context.append(chunk)
 
-  knowledge = "\n\n".join(context)
+  knowledge = "\n\n".join(context) if context else "Tidak ada data relevan yang ditemukan."
   
   history_text = ""
 
