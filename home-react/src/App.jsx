@@ -30,26 +30,43 @@ function App() {
     }
 
     // Animasi saat kembali ke Home
-    const phase = sessionStorage.getItem('foxTransitionPhase')
+    function playReturnAnimation() {
+      const phase = sessionStorage.getItem('foxTransitionPhase')
+      const backNav = sessionStorage.getItem('foxBackNavigation')
+      
+      if (phase === 'toHome' || backNav === 'true') {
+        const x = parseFloat(sessionStorage.getItem('foxOriginX'))
+        const y = parseFloat(sessionStorage.getItem('foxOriginY'))
+        root.style.setProperty('--ox', `${x}px`)
+        root.style.setProperty('--oy', `${y}px`)
 
-    if (phase === 'toHome') {
-      const x = parseFloat(sessionStorage.getItem('foxOriginX'))
-      const y = parseFloat(sessionStorage.getItem('foxOriginY'))
-
-      // overlay statik + inline script udah cover layar di r = max
-      // tinggal animate shrink buka home
-      requestAnimationFrame(() => {
-        overlay.classList.remove('no-transition')
-
+        // overlay statik + inline script udah cover layar di r = max
+        // tinggal animate shrink buka home
         requestAnimationFrame(() => {
-          root.style.setProperty('--r', '0px')
-        })
-      })
+          overlay.classList.remove('no-transition')
 
-      sessionStorage.removeItem('foxTransitionPhase')
-      sessionStorage.removeItem('foxOriginX')
-      sessionStorage.removeItem('foxOriginY')
+          requestAnimationFrame(() => {
+            root.style.setProperty('--r', '0px')
+          })
+        })
+
+        sessionStorage.removeItem('foxTransitionPhase')
+        sessionStorage.removeItem('foxBackNavigation')
+        sessionStorage.removeItem('foxOriginX')
+        sessionStorage.removeItem('foxOriginY')
+        
+        delete fab.dataset.leaving
+      }
     }
+
+    playReturnAnimation()
+
+    // Handle mobile back button (pageshow event untuk BFCache)
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        playReturnAnimation()
+      }
+    })
 
     function handleClick(event) {
       event.preventDefault()
@@ -89,13 +106,26 @@ function App() {
       sessionStorage.setItem('foxTransitionPhase', 'toChat')
 
       let done = false
-      const goToChat = () => {
-        if (done) return
-        done = true
+      let cleanupDone = false
+      let fallbackTimer = null
+
+      const cleanup = () => {
+        if (cleanupDone) return
+        cleanupDone = true
         overlay.removeEventListener(
           'transitionend',
           handleTransitionEnd
         )
+        if (fallbackTimer) clearTimeout(fallbackTimer)
+      }
+
+      const goToChat = () => {
+        if (done) return
+        done = true
+        cleanup()
+        
+        // Navigate segera tanpa tunggu transisi selesai
+        // Jadi loading bar ketutupan overlay
         window.location.href = '/chatbot'
       }
 
@@ -104,19 +134,29 @@ function App() {
         goToChat()
       }
 
-      overlay.addEventListener(
-        'transitionend',
-        handleTransitionEnd
-      )
+      overlay.addEventListener('transitionend', handleTransitionEnd)
 
-      // fallback: transitionend bisa gak fire (prefers-reduced-motion, tab blur, dll)
-      setTimeout(goToChat, 1000)
+      // Navigate pas 70% animasi (sekitar 630ms dari 900ms)
+      // Supaya loading bar ketutupan overlay
+      fallbackTimer = setTimeout(goToChat, 630)
     }
 
     fab.addEventListener('click', handleClick)
 
+    const handlePopState = () => {
+      const phase = sessionStorage.getItem('foxTransitionPhase')
+      const backNav = sessionStorage.getItem('foxBackNavigation')
+      if (phase === 'toHome' || backNav === 'true') {
+        playReturnAnimation()
+      }
+      history.pushState(null, '', location.href)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
     return () => {
       fab.removeEventListener('click', handleClick)
+      window.removeEventListener('popstate', handlePopState)
     }
   }, [])
 

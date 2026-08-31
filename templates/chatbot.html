@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#1C1F23">
 
     <title>Fox AI</title>
 
@@ -10,9 +11,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Hide browser loading bar */
+      html { 
+        overflow: hidden;
+      }
+      body { 
+        overflow: hidden;
+      }
+      ::-webkit-progress-bar,
+      ::-webkit-progress-value,
+      progress {
+        display: none !important;
+      }
+    </style>
 </head>
 <body>
 <div class="circle-overlay" id="circleOverlay"></div>
+<script>
+  document.getElementById('circleOverlay').style.setProperty('--r', '0px');
+</script>
 <script>
   (function(){
     var phase = sessionStorage.getItem('foxTransitionPhase');

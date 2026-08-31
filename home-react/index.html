@@ -4,10 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1C1F23" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>home-react</title>
+    <style>
+      /* Hide browser loading bar for smooth transition */
+      html { 
+        background: #1C1F23;
+        /* Force hide progress bar di Chrome/Safari */
+        overflow: hidden;
+      }
+      body { 
+        margin: 0; 
+        background: linear-gradient(to right, #1C1F23, #253A4A);
+        /* Force hide progress bar */
+        overflow: hidden;
+      }
+      /* Hide loading indicator di beberapa browser */
+      ::-webkit-progress-bar,
+      ::-webkit-progress-value,
+      progress {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -249,7 +249,8 @@ body{
     filter:none;
     opacity:0;
     margin-bottom:-12px;
-    animation: logoIntro 1s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation: logoIntro 0.8s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation-delay: 0.2s;
 }
 
 .fox-logo img{
@@ -289,7 +290,7 @@ body{
     color: var(--text);
     opacity:0;
     animation: staggerIn .85s cubic-bezier(.22, 1, .36, 1) forwards;
-    animation-delay:.7s;
+    animation-delay: 0.45s;
 }
 
 .welcome-screen p{
@@ -297,7 +298,7 @@ body{
     font-size: 16px;
     opacity:0;
     animation: staggerIn .85s cubic-bezier(.22, 1, .36, 1) forwards;
-    animation-delay:.95s;
+    animation-delay: 0.7s;
 }
 
 @keyframes staggerIn{
@@ -333,10 +334,10 @@ body{
     animation: staggerIn .7s cubic-bezier(.22, 1, .36, 1) forwards;
 }
 
-.suggestions button:nth-child(1){ animation-delay:1.4s; }
-.suggestions button:nth-child(2){ animation-delay:1.6s; }
-.suggestions button:nth-child(3){ animation-delay:1.8s; }
-.suggestions button:nth-child(4){ animation-delay:2s; }
+.suggestions button:nth-child(1){ animation-delay: 0.95s; }
+.suggestions button:nth-child(2){ animation-delay: 1.15s; }
+.suggestions button:nth-child(3){ animation-delay: 1.35s; }
+.suggestions button:nth-child(4){ animation-delay: 1.55s; }
 .suggestions button:hover{
     background:rgba(175,157,128,.12);
     border-color:rgba(175,157,128,.5);

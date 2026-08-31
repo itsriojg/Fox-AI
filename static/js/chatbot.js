@@ -5,9 +5,14 @@ const form = document.querySelector("#chat-form");
 const sendButton = form.querySelector("button[type='submit']");
 const suggestions = document.querySelectorAll(".suggestion-btn");
 const clearForm = document.querySelector("#clear-form");
+const clearButton = document.querySelector("#clear-button");
 const backButton = document.querySelector("#back-button");
 const overlay = document.querySelector("#circleOverlay");
 const root = document.documentElement;
+
+window.onunload = () => {};
+
+root.style.setProperty('--r', '0px');
 
 function maxRadiusFrom(x, y){
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -30,24 +35,19 @@ function maxRadiusFrom(x, y){
   sessionStorage.removeItem('foxTransitionPhase');
 })();
 
-backButton.addEventListener("click", () => {
-  // guard biar nggak dobel eksekusi kalau di-spam
-  if (backButton.dataset.leaving) return;
-
+function handleBackNavigation() {
   const x = parseFloat(sessionStorage.getItem('foxOriginX'));
   const y = parseFloat(sessionStorage.getItem('foxOriginY'));
 
-  // gak ada origin tersimpen (misal chatbot dibuka langsung lewat URL)
-  // -> gak ada yang di-reverse, langsung pindah biasa
-  if (Number.isNaN(x) || Number.isNaN(y)){
+  if (Number.isNaN(x) || Number.isNaN(y)) {
     window.location.href = "/";
     return;
   }
 
+  if (backButton.dataset.leaving) return;
+
   backButton.dataset.leaving = "true";
 
-  // snap origin instan (tanpa transisi) dulu, baru expand di frame berikutnya
-  // biar origin nggak keburu ke-interpolasi (parity sama pola forward)
   overlay.classList.add('no-transition');
   root.style.setProperty('--ox', x + 'px');
   root.style.setProperty('--oy', y + 'px');
@@ -62,22 +62,72 @@ backButton.addEventListener("click", () => {
 
   sessionStorage.setItem('foxTransitionPhase', 'toHome');
 
+  function onEnd(e) {
+    if (e.propertyName !== 'clip-path') return
+    goHome()
+  }
+
+  overlay.addEventListener('transitionend', onEnd)
+
   let done = false;
+  let cleanupDone = false;
+  let fallbackTimer = null;
+
+  const cleanup = () => {
+    if (cleanupDone) return;
+    cleanupDone = true;
+    overlay.removeEventListener('transitionend', onEnd);
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+  };
+
   const goHome = () => {
     if (done) return;
     done = true;
-    overlay.removeEventListener('transitionend', onEnd);
+    cleanup();
+    history.replaceState(null, '', '/');
     window.location.href = "/";
   };
 
-  function onEnd(e){
-    if (e.propertyName !== 'clip-path') return;
-    goHome();
-  }
-  overlay.addEventListener('transitionend', onEnd);
+  // Navigate pas 70% animasi (630ms dari 900ms)
+  // Supaya loading bar ketutupan overlay
+  fallbackTimer = setTimeout(goHome, 630);
+}
 
-  // fallback: transitionend bisa gak fire (prefers-reduced-motion, tab blur, dll)
-  setTimeout(goHome, 1000);
+backButton.addEventListener("click", handleBackNavigation);
+
+// Handle mobile back button via beforeunload
+window.addEventListener('beforeunload', () => {
+  // Jika page unloading karena back button, set flag
+  // Note: tidak bisa detect pasti back button vs other navigation
+  if (!sessionStorage.getItem('foxTransitionPhase')) {
+    sessionStorage.setItem('foxBackNavigation', 'true');
+  }
+});
+
+// Fallback: pageshow untuk BFCache scenario
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && sessionStorage.getItem('foxTransitionPhase') === 'toChat') {
+    (function playEntranceIfNeeded(){
+      const phase = sessionStorage.getItem('foxTransitionPhase');
+      if (phase !== 'toChat') return;
+
+      requestAnimationFrame(() => {
+        overlay.classList.remove('no-transition');
+        requestAnimationFrame(() => {
+          root.style.setProperty('--r', '0px');
+        });
+      });
+
+      sessionStorage.removeItem('foxTransitionPhase');
+    })();
+  }
+});
+
+// Mencegah blackscreen jika browser restore /chatbot dari BFCache
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && !sessionStorage.getItem('foxTransitionPhase')) {
+    window.location.href = '/';
+  }
 });
 
 suggestions.forEach((button)=>{
@@ -142,8 +192,6 @@ form.addEventListener("submit", (event) => {
     kirimPesan(pesan);
     console.log(pesan);
     });
-
-const clearButton = document.querySelector("#clear-button");
 
 function updateClearButton(){
   clearButton.disabled = messages.children.length === 0;
