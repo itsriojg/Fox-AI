@@ -39,3 +39,31 @@ def get_ai_reply(system_prompt, prompt):
   except Exception as e:
     print(e)
     return "Maaf, server sedang mengalami kendala. Silakan coba lagi."
+
+def get_ai_reply_stream(system_prompt, prompt):
+  start = time.time()
+  print(f"Model : {MODEL} [stream]")
+  stream = client.chat.completions.create(
+    model=MODEL,
+    messages=[
+      {
+       "role": "system",
+       "content": system_prompt
+      },
+      {
+       "role": "user",
+       "content": prompt
+      }
+    ],
+    timeout=TIMEOUT,
+    stream=True
+  )
+  for chunk in stream:
+    try:
+      delta = chunk.choices[0].delta.content
+    except Exception:
+      delta = None
+    if delta:
+      yield delta
+  end = time.time()
+  print(f"Waktu stream: {end - start:.2f} detik")

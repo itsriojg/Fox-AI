@@ -13,11 +13,11 @@ else:
     rebuild_faiss()
     index = load_index()
 
-def get_reply(message, history):
+def build_rag_prompt(message, history):
   try:
     query_embedding = get_embedding(message)
   except RuntimeError:
-    return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti."
+    return None, None, "embedding_error"
   context = []
   scores, indexes = cari_embedding(index, query_embedding, top_k=5)
   if len(scores) > 0 and len(indexes) > 0:
@@ -46,6 +46,11 @@ Berikut adalah riwayat obrolan:
 Ini adalah pertanyaan user:
 {message}
 """
-  
-  reply = get_ai_reply(system_prompt, prompt)
+  return system_prompt, prompt, None
+
+def get_reply(message, history):
+  system_p, prompt, err = build_rag_prompt(message, history)
+  if err == "embedding_error":
+    return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti."
+  reply = get_ai_reply(system_p, prompt)
   return reply

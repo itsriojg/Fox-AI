@@ -353,6 +353,8 @@ body{
     border-radius:18px;
     font-size:15px;
     line-height:1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
     animation:messageShow .4s cubic-bezier(.22, 1, .36, 1);
     /* BUG FIX #2: this is the ONLY thing allowed to be selected/copied */
     -webkit-user-select: text;

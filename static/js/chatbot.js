@@ -153,34 +153,238 @@ function setSending(isSending){
 input.addEventListener("input", updateSendButton);
 updateSendButton();
 
-function kirimPesan(pesan){
+let lastFailedPesan = null;
+
+function showRetryButton(pesan, aiBubble) {
+  const retryWrapper = document.createElement("div");
+  retryWrapper.className = "retry-wrapper";
+  retryWrapper.style.cssText = "align-self:flex-start; margin:6px 0 8px 0;";
+  const retryBtn = document.createElement("button");
+  retryBtn.textContent = "Coba lagi";
+  retryBtn.className = "retry-button";
+  retryBtn.style.cssText = "padding:8px 16px; border-radius:999px; border:1px solid rgba(175,157,128,.4); background:rgba(255,255,255,.06); color:#FBFBFB; cursor:pointer; font-size:13px; font-family: Poppins, sans-serif;";
+  retryBtn.addEventListener("click", () => {
+    retryWrapper.remove();
+    if (aiBubble && aiBubble.parentNode) {
+      aiBubble.remove();
+      updateClearButton();
+    }
+    kirimPesan(pesan);
+  });
+  retryWrapper.appendChild(retryBtn);
+  messages.appendChild(retryWrapper);
+  scrollkebawah();
+}
+
+async function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
   buatBubble("Rio", pesan);
   input.value = "";
   setSending(true);
+  lastFailedPesan = pesan;
   const typing = tampilkanTyping();
-  fetch("/api/chat", {
-      method: "POST",
-      body: new URLSearchParams({
-      pesan: pesan
-    })
-  })
-    .then((response) => response.json().then((data) => ({ response, data })))
-    .then(({ response, data }) => {
-      typing.remove()
-      if (!response.ok) {
-        buatBubble("AI", data.error || "Terjadi kesalahan. Coba lagi.");
-        return;
+  let aiBubble = null;
+  let hasStreamed = false;
+  let buffer = "";
+  let charQueue = [];
+  let flushTimer = null;
+  let doneReceived = false;
+  let streamFinished = false;
+  let isTypingRemoved = false;
+
+  function startFlush() {
+    if (flushTimer) return;
+    flushTimer = setInterval(() => {
+      if (charQueue.length > 0 && !isTypingRemoved) {
+        if (typing && typing.parentNode) typing.remove();
+        isTypingRemoved = true;
       }
-      buatBubble("AI", data.reply);
-    })
-    .catch((error) => {
-      typing.remove();
-      console.error(error);
-    })
-    .finally(() => {
-      setSending(false);
+      if (charQueue.length > 0) {
+        let burst = 1;
+        if (charQueue.length > 50) burst = 3;
+        else if (charQueue.length > 20) burst = 2;
+        let chunk = "";
+        for (let i = 0; i < burst && charQueue.length > 0; i++) {
+          chunk += charQueue.shift();
+        }
+        aiBubble.textContent += chunk;
+        hasStreamed = true;
+        scrollkebawah();
+      } else if (doneReceived && streamFinished) {
+        clearInterval(flushTimer);
+        flushTimer = null;
+        setSending(false);
+        scrollkebawahSmooth();
+      }
+    }, 20);
+  }
+
+  function stopFlushImmediate() {
+    if (flushTimer) {
+      clearInterval(flushTimer);
+      flushTimer = null;
+    }
+  }
+
+  try {
+    const response = await fetch("/api/chat/stream", {
+      method: "POST",
+      body: new URLSearchParams({pesan: pesan})
     });
+    if (!response.ok) {
+      throw new Error("Stream HTTP " + response.status);
+    }
+    if (!response.body) {
+      throw new Error("ReadableStream not supported");
+    }
+    aiBubble = document.createElement("div");
+    aiBubble.className = "message AI";
+    aiBubble.textContent = "";
+    messages.appendChild(aiBubble);
+    updateClearButton();
+    startFlush();
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        streamFinished = true;
+        if (charQueue.length === 0) doneReceived = true;
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith("data:")) continue;
+        const jsonStr = part.slice(5).trim();
+        if (!jsonStr) continue;
+        let data;
+        try { data = JSON.parse(jsonStr); } catch (e) { continue; }
+        if (data.token) {
+          hasStreamed = true;
+          for (const ch of data.token) charQueue.push(ch);
+        }
+        if (data.error) {
+          if (!hasStreamed && charQueue.length === 0) {
+            stopFlushImmediate();
+            if (typing && typing.parentNode) typing.remove();
+            isTypingRemoved = true;
+            aiBubble.textContent = data.error;
+            setSending(false);
+          } else {
+            doneReceived = true;
+            streamFinished = true;
+            const waitError = setInterval(() => {
+              if (charQueue.length === 0) {
+                clearInterval(waitError);
+                const errDiv = document.createElement("div");
+                errDiv.className = "stream-error";
+                errDiv.style.cssText = "align-self:flex-start; font-size:13px; color:#ff9b9b; margin:4px 0 6px 4px;";
+                errDiv.textContent = data.error;
+                messages.appendChild(errDiv);
+                showRetryButton(pesan, null);
+                scrollkebawah();
+              }
+            }, 60);
+          }
+        }
+        if (data.done) {
+          doneReceived = true;
+        }
+      }
+    }
+    if (buffer.trim().startsWith("data:")) {
+      try {
+        const data = JSON.parse(buffer.trim().slice(5).trim());
+        if (data.token) for (const ch of data.token) charQueue.push(ch);
+        if (data.error && !hasStreamed && charQueue.length === 0) {
+          stopFlushImmediate();
+          if (typing && typing.parentNode) typing.remove();
+          isTypingRemoved = true;
+          aiBubble.textContent = data.error;
+          setSending(false);
+        }
+        if (data.done) doneReceived = true;
+      } catch (e) {}
+    }
+    if (doneReceived && charQueue.length === 0) {
+      stopFlushImmediate();
+      if (typing && typing.parentNode) typing.remove();
+      isTypingRemoved = true;
+      setSending(false);
+      scrollkebawahSmooth();
+    } else if (!doneReceived) {
+      streamFinished = true;
+      doneReceived = true;
+    }
+  } catch (error) {
+    console.error("[STREAM ERROR]", error);
+    if (aiBubble && (hasStreamed || charQueue.length > 0)) {
+      doneReceived = true;
+      streamFinished = true;
+      const waitErr = setInterval(() => {
+        if (charQueue.length === 0) {
+          clearInterval(waitErr);
+          if (flushTimer) {
+            clearInterval(flushTimer);
+            flushTimer = null;
+          }
+          if (typing && typing.parentNode) typing.remove();
+          isTypingRemoved = true;
+          const errDiv = document.createElement("div");
+          errDiv.className = "stream-error";
+          errDiv.style.cssText = "align-self:flex-start; font-size:13px; color:#ff9b9b; margin:4px 0 6px 4px;";
+          errDiv.textContent = "Koneksi terputus di tengah. ";
+          messages.appendChild(errDiv);
+          showRetryButton(pesan, null);
+          setSending(false);
+          scrollkebawah();
+        }
+      }, 60);
+    } else {
+      stopFlushImmediate();
+      if (aiBubble && aiBubble.parentNode) aiBubble.remove();
+      if (typing && typing.parentNode) typing.remove();
+      isTypingRemoved = true;
+      try {
+        const fallbackResp = await fetch("/api/chat", {
+          method: "POST",
+          body: new URLSearchParams({pesan: pesan})
+        });
+        const fallbackData = await fallbackResp.json();
+        if (!fallbackResp.ok) {
+          buatBubble("AI", fallbackData.error || "Terjadi kesalahan. Coba lagi.");
+          showRetryButton(pesan, null);
+        } else {
+          buatBubble("AI", fallbackData.reply);
+        }
+      } catch (fallbackErr) {
+        console.error(fallbackErr);
+        if (typing && typing.parentNode) typing.remove();
+        isTypingRemoved = true;
+        const exists = document.querySelector(".stream-error");
+        if (!exists) {
+          const errDiv = document.createElement("div");
+          errDiv.className = "stream-error";
+          errDiv.style.cssText = "align-self:flex-start; font-size:13px; color:#ff9b9b; margin:4px 0 6px 4px;";
+          errDiv.textContent = "Gagal terhubung. Periksa jaringan dan coba lagi.";
+          messages.appendChild(errDiv);
+          showRetryButton(pesan, null);
+        }
+      }
+      setSending(false);
+    }
+    scrollkebawah();
+  } finally {
+    if (typing && typing.parentNode && !isTypingRemoved) typing.remove();
+    if (doneReceived && charQueue.length === 0 && flushTimer === null) {
+      setSending(false);
+    } else if (!hasStreamed && charQueue.length === 0 && !doneReceived) {
+      // will be handled by catch fallback
+    }
+  }
 }
 
 form.addEventListener("submit", (event) => {
@@ -243,13 +447,25 @@ function tampilkanTyping(){
   return typing;
 }
 
+let pendingScroll = false;
+
 function scrollkebawah(){
   const chatHistory = document.querySelector(".chat-history");
-
+  if(!chatHistory) return;
+  if(pendingScroll) return;
+  pendingScroll = true;
   requestAnimationFrame(() => {
-    chatHistory.scrollTo({
-      top: chatHistory.scrollHeight,
-      behavior: "smooth"
-    });
+    pendingScroll = false;
+    // instant during streaming — jauh lebih mulus, tidak jank seperti smooth tiap 60ms
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  });
+}
+
+function scrollkebawahSmooth(){
+  const chatHistory = document.querySelector(".chat-history");
+  if(!chatHistory) return;
+  chatHistory.scrollTo({
+    top: chatHistory.scrollHeight,
+    behavior: "smooth"
   });
 }
