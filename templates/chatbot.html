@@ -93,14 +93,7 @@
         <button type="button" class="suggestion-btn">Suggestion 4?</button>
       </div>
     </div>
-        <div id="messages">
-          {% for pesan in riwayat_chat %}
-          <div class="message {{pesan['sender']}}">
-        {{pesan["text"]}}
-    </div>
-            {% endfor %}
-
-          </div>
+        <div id="messages">{% for pesan in riwayat_chat %}<div class="message {{ pesan['sender'] }}">{{ pesan["text"] }}</div>{% endfor %}</div>
         </div>
 
     <!-- Input -->

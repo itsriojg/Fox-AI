@@ -427,6 +427,12 @@ function buatBubble(sender, text){
 if(messages.children.length > 0){
   welcomeScreen.style.display = "none";
 }
+// safety net: trim history yang terlanjur punya leading newline/spasi akibat template lama + pre-wrap
+document.querySelectorAll("#messages .message").forEach(el => {
+  const t = el.textContent;
+  const trimmed = t.trim();
+  if (t !== trimmed) el.textContent = trimmed;
+});
 updateClearButton();
 
 function tampilkanTyping(){
