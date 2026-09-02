@@ -5,5 +5,3 @@ __pycache__/
 .env
 *.pdf
 venv/
-AGENTS.md
-opencode.json
