@@ -29,9 +29,6 @@
 <body>
 <div class="circle-overlay" id="circleOverlay"></div>
 <script>
-  document.getElementById('circleOverlay').style.setProperty('--r', '0px');
-</script>
-<script>
   (function(){
     var phase = sessionStorage.getItem('foxTransitionPhase');
     if (phase !== 'toChat') return;
@@ -41,10 +38,12 @@
     var vw = window.innerWidth, vh = window.innerHeight;
     var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
     var root = document.documentElement;
+    var overlay = document.getElementById('circleOverlay');
+    overlay.style.removeProperty('--r');
     root.style.setProperty('--ox', x + 'px');
     root.style.setProperty('--oy', y + 'px');
     root.style.setProperty('--r', r + 'px');
-    document.getElementById('circleOverlay').classList.add('no-transition');
+    overlay.classList.add('no-transition');
   })();
 </script>
 <div class="chat-container">

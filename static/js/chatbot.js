@@ -12,7 +12,12 @@ const root = document.documentElement;
 
 window.onunload = () => {};
 
-root.style.setProperty('--r', '0px');
+// hanya reset ke 0 kalau bukan arrival dari home (toChat)
+// kalau toChat, --r sudah di-set max di inline script chatbot.html biar overlay ketutup sebelum paint
+if (sessionStorage.getItem('foxTransitionPhase') !== 'toChat') {
+  root.style.setProperty('--r', '0px');
+  overlay.style.removeProperty('--r');
+}
 
 function maxRadiusFrom(x, y){
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -25,8 +30,10 @@ function maxRadiusFrom(x, y){
   const phase = sessionStorage.getItem('foxTransitionPhase');
   if (phase !== 'toChat') return;
 
+  overlay.style.removeProperty('--r');
   requestAnimationFrame(() => {
     overlay.classList.remove('no-transition');
+    overlay.getBoundingClientRect();
     requestAnimationFrame(() => {
       root.style.setProperty('--r', '0px');
     });
@@ -111,8 +118,10 @@ window.addEventListener('pageshow', (event) => {
       const phase = sessionStorage.getItem('foxTransitionPhase');
       if (phase !== 'toChat') return;
 
+      overlay.style.removeProperty('--r');
       requestAnimationFrame(() => {
         overlay.classList.remove('no-transition');
+        overlay.getBoundingClientRect();
         requestAnimationFrame(() => {
           root.style.setProperty('--r', '0px');
         });
