@@ -642,3 +642,64 @@ body{
 @media (prefers-reduced-motion: reduce){
     .circle-overlay{ transition:none; }
 }
+
+/* Fox splash intro — transparan, tengah layar, FLIP mulus */
+#foxSplash{
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 9998;
+    display: none;
+    place-items: center;
+    opacity: 1;
+    pointer-events: none;
+}
+#foxSplash.is-active{
+    display: grid;
+    pointer-events: auto;
+}
+#foxSplash.is-active img{
+    animation: splashIn 1.2s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+#foxSplash.is-out{
+    display: grid;
+    pointer-events: none;
+}
+#foxSplash img{
+    width: min(90vmin, 560px);
+    height: min(90vmin, 560px);
+    object-fit: contain;
+    filter:
+        drop-shadow(0 0 16px rgba(175,157,128,.35))
+        drop-shadow(0 0 36px rgba(94,20,27,.2));
+    will-change: transform, opacity;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    transform-origin: center center;
+}
+@keyframes splashIn{
+    from{ opacity:0; transform:scale(.08); }
+    to{ opacity:1; transform:scale(1); }
+}
+/* pause welcome sampai splash selesai → body.welcome-ready baru jalan */
+body:not(.welcome-ready) .fox-logo{ opacity:0; animation:none !important; }
+body:not(.welcome-ready) .welcome-text h1,
+body:not(.welcome-ready) .welcome-text p,
+body:not(.welcome-ready) .suggestions button{ opacity:0; animation:none !important; }
+/* setelah splash, logo langsung nongol tanpa delay biar seamless, teks tetap stagger */
+body.welcome-ready.splash-done .fox-logo{ opacity:1; animation:none !important; transform:none; }
+body.welcome-ready.splash-done .welcome-text h1{ animation-delay:.15s !important; }
+body.welcome-ready.splash-done .welcome-text p{ animation-delay:.35s !important; }
+body.welcome-ready.splash-done .suggestions button:nth-child(1){ animation-delay:.55s !important; }
+body.welcome-ready.splash-done .suggestions button:nth-child(2){ animation-delay:.70s !important; }
+body.welcome-ready.splash-done .suggestions button:nth-child(3){ animation-delay:.85s !important; }
+body.welcome-ready.splash-done .suggestions button:nth-child(4){ animation-delay:1.0s !important; }
+
+@media (prefers-reduced-motion: reduce){
+    #foxSplash{ display:none !important; }
+    body:not(.welcome-ready) .fox-logo,
+    body:not(.welcome-ready) .welcome-text h1,
+    body:not(.welcome-ready) .welcome-text p,
+    body:not(.welcome-ready) .suggestions button{ animation:none !important; }
+}

@@ -12,11 +12,102 @@ const root = document.documentElement;
 
 window.onunload = () => {};
 
+const splash = document.getElementById('foxSplash');
+const splashImg = splash ? splash.querySelector('img') : null;
+let splashTimers = [];
+let splashDone = false;
+
+function shouldShowSplash(isToChat){
+  if (!splash || !splashImg) return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  if (messages.children.length > 0) return false;
+  if (welcomeScreen && getComputedStyle(welcomeScreen).display === 'none') return false;
+  return isToChat;
+}
+function revealWelcome(){
+  document.body.classList.add('welcome-ready');
+  if (splash) {
+    splash.style.display = 'none';
+    splash.classList.remove('is-active','is-out');
+    if (splashImg) {
+      splashImg.style.transition = 'none';
+      splashImg.style.transform = 'none';
+    }
+  }
+}
+function clearSplashTimers(){
+  splashTimers.forEach(clearTimeout);
+  splashTimers = [];
+}
+function flipToWelcome(doneCb){
+  const target = document.querySelector('.fox-logo img');
+  if (!target || !splashImg) {
+    if (doneCb) doneCb();
+    return;
+  }
+  const sRect = splashImg.getBoundingClientRect();
+  const tRect = target.getBoundingClientRect();
+  const sCx = sRect.left + sRect.width / 2;
+  const sCy = sRect.top + sRect.height / 2;
+  const tCx = tRect.left + tRect.width / 2;
+  const tCy = tRect.top + tRect.height / 2;
+  const dx = tCx - sCx;
+  const dy = tCy - sCy;
+  const scale = tRect.width / sRect.width;
+  splashImg.style.transition = 'transform .5s cubic-bezier(.65, 0, .35, 1)';
+  splashImg.getBoundingClientRect();
+  splashImg.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    splashImg.removeEventListener('transitionend', onEnd);
+    splash.style.display = 'none';
+    splash.classList.remove('is-out');
+    splashImg.style.transition = 'none';
+    splashImg.style.transform = 'none';
+    document.body.classList.add('welcome-ready','splash-done');
+    if (doneCb) doneCb();
+  };
+  function onEnd(e){
+    if (e.propertyName !== 'transform') return;
+    finish();
+  }
+  splashImg.addEventListener('transitionend', onEnd);
+  const fallback = setTimeout(finish, 600);
+  splashTimers.push(fallback);
+}
+function playFoxSplash(){
+  if (!splash || !splashImg || splashDone) return;
+  splashDone = true;
+  splash.style.display = 'grid';
+  splashImg.style.transition = 'none';
+  splashImg.style.transform = 'none';
+  splash.getBoundingClientRect();
+  requestAnimationFrame(() => splash.classList.add('is-active'));
+  const tHold = setTimeout(() => {
+    splash.classList.remove('is-active');
+    splash.classList.add('is-out');
+    flipToWelcome();
+  }, 1800);
+  splashTimers.push(tHold);
+  const skip = () => {
+    clearSplashTimers();
+    splash.classList.remove('is-active');
+    splash.classList.add('is-out');
+    // langsung FLIP tanpa tunggu hold
+    requestAnimationFrame(() => flipToWelcome());
+  };
+  splash.addEventListener('click', skip, { once: true });
+}
+
 // hanya reset ke 0 kalau bukan arrival dari home (toChat)
 // kalau toChat, --r sudah di-set max di inline script chatbot.html biar overlay ketutup sebelum paint
-if (sessionStorage.getItem('foxTransitionPhase') !== 'toChat') {
+const _isToChatArrival = sessionStorage.getItem('foxTransitionPhase') === 'toChat';
+if (!_isToChatArrival) {
   root.style.setProperty('--r', '0px');
   overlay.style.removeProperty('--r');
+  revealWelcome();
 }
 
 function maxRadiusFrom(x, y){
@@ -27,8 +118,9 @@ function maxRadiusFrom(x, y){
 }
 
 (function playEntranceIfNeeded(){
-  const phase = sessionStorage.getItem('foxTransitionPhase');
-  if (phase !== 'toChat') return;
+  if (!_isToChatArrival) return;
+
+  const needsSplash = shouldShowSplash(true);
 
   overlay.style.removeProperty('--r');
   requestAnimationFrame(() => {
@@ -36,10 +128,33 @@ function maxRadiusFrom(x, y){
     overlay.getBoundingClientRect();
     requestAnimationFrame(() => {
       root.style.setProperty('--r', '0px');
+      if (needsSplash) {
+        // overlap 180ms biar circle udah kebuka 20% baru logo mulai, zoom 0.08→1 jadi keliatan
+        const t = setTimeout(playFoxSplash, 180);
+        splashTimers.push(t);
+      }
     });
   });
 
   sessionStorage.removeItem('foxTransitionPhase');
+
+  if (!needsSplash) {
+    // tanpa splash, reveal setelah circle selesai (0.9s) biar welcome tidak flash
+    let revealed = false;
+    const doReveal = () => {
+      if (revealed) return;
+      revealed = true;
+      overlay.removeEventListener('transitionend', onEnd);
+      revealWelcome();
+    };
+    function onEnd(e){
+      if (e.propertyName !== 'clip-path') return;
+      doReveal();
+    }
+    overlay.addEventListener('transitionend', onEnd);
+    const fb = setTimeout(doReveal, 950);
+    splashTimers.push(fb);
+  }
 })();
 
 function handleBackNavigation() {
@@ -114,21 +229,36 @@ window.addEventListener('beforeunload', () => {
 // Fallback: pageshow untuk BFCache scenario
 window.addEventListener('pageshow', (event) => {
   if (event.persisted && sessionStorage.getItem('foxTransitionPhase') === 'toChat') {
-    (function playEntranceIfNeeded(){
-      const phase = sessionStorage.getItem('foxTransitionPhase');
-      if (phase !== 'toChat') return;
-
-      overlay.style.removeProperty('--r');
+    const needsSplash = shouldShowSplash(true);
+    overlay.style.removeProperty('--r');
+    requestAnimationFrame(() => {
+      overlay.classList.remove('no-transition');
+      overlay.getBoundingClientRect();
       requestAnimationFrame(() => {
-        overlay.classList.remove('no-transition');
-        overlay.getBoundingClientRect();
-        requestAnimationFrame(() => {
-          root.style.setProperty('--r', '0px');
-        });
+        root.style.setProperty('--r', '0px');
+        if (needsSplash) {
+          const t = setTimeout(playFoxSplash, 180);
+          splashTimers.push(t);
+        }
       });
-
-      sessionStorage.removeItem('foxTransitionPhase');
-    })();
+    });
+    sessionStorage.removeItem('foxTransitionPhase');
+    if (!needsSplash) {
+      let revealed = false;
+      const doReveal = () => {
+        if (revealed) return;
+        revealed = true;
+        overlay.removeEventListener('transitionend', onEnd);
+        revealWelcome();
+      };
+      function onEnd(e){
+        if (e.propertyName !== 'clip-path') return;
+        doReveal();
+      }
+      overlay.addEventListener('transitionend', onEnd);
+      const fb = setTimeout(doReveal, 950);
+      splashTimers.push(fb);
+    }
   }
 });
 
