@@ -46,6 +46,20 @@ button:focus,
 .chat-input button:focus{
   outline: none;
 }
+button:focus-visible,
+.suggestion-btn:focus-visible,
+.clear-button:focus-visible,
+.back-button:focus-visible,
+.chat-input button:focus-visible{
+  outline: 2px solid #AF9D80;
+  outline-offset: 2px;
+}
+.chat-input input:focus,
+.chat-input input:focus-visible{
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
 
 /* root canvas harus gelap juga — pas keyboard naik/turun viewport
    di-resize dan area root yang belum ke-paint keliatan putih */
@@ -64,7 +78,9 @@ body{
   background-attachment: fixed;
   overscroll-behavior:none;
   color: var(--text);
+  height: 100vh;
   height: 100dvh;
+  height: 100svh;
   overflow: hidden;
   position: fixed;
   width: 100%;
@@ -82,8 +98,17 @@ body{
     top:0;
     left:0;
     width:100%;
+    max-width:860px;
+    margin:0 auto;
+    right:0;
+    height:100vh;
     height:100dvh;
+    height:100svh;
     overflow:hidden;
+}
+@supports (height:100dvh){
+  body{ height:100dvh; }
+  .chat-container{ height:100dvh; }
 }
 
 .chat-header{
@@ -91,11 +116,13 @@ body{
     align-items:center;
     justify-content:space-between;
     height:56px;
+    min-height:56px;
     padding:0 16px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: calc(16px + env(safe-area-inset-left, 0px));
+    padding-right: calc(16px + env(safe-area-inset-right, 0px));
     gap:12px;
     background:#1C1F23;
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
     position:relative;
     z-index:20;
     -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, transparent 100%);
@@ -103,8 +130,8 @@ body{
 }
 
 .back-button{
-    width:32px;
-    height:32px;
+    width:44px;
+    height:44px;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -118,9 +145,11 @@ body{
     transition:var(--transition);
 }
 
-.back-button:hover{
-    background:rgba(255,255,255,.05);
-    color:#FBFBFB;
+@media (hover:hover){
+  .back-button:hover{
+      background:rgba(255,255,255,.05);
+      color:#FBFBFB;
+  }
 }
 
 .header-info{
@@ -205,8 +234,8 @@ body{
 }
 
 .clear-button{
-    width:30px;
-    height:30px;
+    width:44px;
+    height:44px;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -220,9 +249,11 @@ body{
     flex-shrink:0;
 }
 
-.clear-button:hover{
-    background:rgba(255,80,80,.08);
-    color:#ff9b9b;
+@media (hover:hover){
+  .clear-button:hover{
+      background:rgba(255,80,80,.08);
+      color:#ff9b9b;
+  }
 }
 
 .clear-button:disabled{
@@ -254,8 +285,8 @@ body{
 }
 
 .fox-logo img{
-    width: 180px;
-    height: 180px;
+    width: clamp(120px, 38vw, 180px);
+    height: clamp(120px, 38vw, 180px);
     object-fit: contain;
     filter:
         drop-shadow(0 0 16px rgba(175,157,128,.35))
@@ -328,22 +359,36 @@ body{
     border:1px solid var(--border);
     border-radius:999px;
     cursor:pointer;
-    transition:var(--transition);
+    transition: transform .28s cubic-bezier(.22,1,.36,1), box-shadow .28s ease, border-color .28s ease, background .28s ease;
     font-size:14px;
     opacity:0;
     animation: staggerIn .7s cubic-bezier(.22, 1, .36, 1) forwards;
+    will-change: transform, box-shadow;
 }
 
 .suggestions button:nth-child(1){ animation-delay: 0.95s; }
 .suggestions button:nth-child(2){ animation-delay: 1.15s; }
 .suggestions button:nth-child(3){ animation-delay: 1.35s; }
 .suggestions button:nth-child(4){ animation-delay: 1.55s; }
-.suggestions button:hover{
-    background:rgba(175,157,128,.12);
-    border-color:rgba(175,157,128,.5);
-    color:#FBFBFB;
-    transform:translateY(-2px);
-    box-shadow:0 0 14px rgba(175,157,128,.45);
+@media (hover:hover){
+  .suggestions button:hover{
+      background:rgba(94,20,27,.18);
+      border-color:rgba(94,20,27,.70);
+      color:#FBFBFB;
+      transform:translateY(-3px) scale(1.02);
+      box-shadow: 0 6px 14px rgba(0,0,0,.30), 0 0 20px rgba(94,20,27,.55);
+  }
+}
+.suggestions button:active{
+    transform:translateY(-1px) scale(.98);
+}
+@media (hover:none){
+  .suggestions button:active{
+      background:rgba(94,20,27,.14);
+      border-color:rgba(94,20,27,.45);
+      box-shadow:0 0 14px rgba(94,20,27,.40);
+      transform:scale(.98);
+  }
 }
 
 .message{
@@ -351,7 +396,7 @@ body{
     padding:14px 18px;
     margin:4px 0;
     border-radius:18px;
-    font-size:15px;
+    font-size:clamp(14px, 3.8vw, 15px);
     line-height:1.5;
     white-space: pre-wrap;
     word-break: break-word;
@@ -363,8 +408,10 @@ body{
     -webkit-touch-callout: default;
 }
 
-.message:hover{
-  transform:translateY(-2px);
+@media (hover:hover){
+  .message:hover{
+    transform:translateY(-2px);
+  }
 }
 
 .Rio{
@@ -386,7 +433,7 @@ body{
 
 .header-glow{
     position:absolute;
-    top:44px;
+    top:56px;
     left:0;
     width:100%;
     height:32px;
@@ -400,7 +447,7 @@ body{
     flex:1;
     min-height:0;
     overflow-y:auto;
-    padding:30px;
+    padding:clamp(16px, 4vw, 30px);
     display:flex;
     flex-direction:column;
     gap:14px;
@@ -418,6 +465,9 @@ body{
 .chat-input{
     flex-shrink:0;
     padding:16px 20px 24px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(20px + env(safe-area-inset-left, 0px));
+    padding-right: calc(20px + env(safe-area-inset-right, 0px));
     background:transparent;
     border-top:none;
     position:relative;
@@ -432,19 +482,20 @@ body{
     margin:0 auto;
     padding:8px 8px 8px 22px;
     background:#1C1F23;
-    border:1px solid rgba(175,157,128,.4);
+    border:1px solid rgba(175,157,128,.40);
     border-radius:999px;
+    overflow:hidden;
     box-shadow:
         0 0 0 1px rgba(175,157,128,.12),
         0 0 18px rgba(175,157,128,.42),
         0 8px 24px rgba(0,0,0,.45);
-    transition:box-shadow .25s ease, border-color .25s ease;
+    transition:box-shadow .28s cubic-bezier(.22,1,.36,1), border-color .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
 }
 
 .chat-input form:focus-within{
     border-color:rgba(175,157,128,.75);
     box-shadow:
-        0 0 0 1px rgba(175,157,128,.2),
+        0 0 0 1px rgba(175,157,128,.20),
         0 0 26px rgba(175,157,128,.68),
         0 8px 24px rgba(0,0,0,.5);
 }
@@ -456,7 +507,7 @@ body{
     outline:none;
     background:transparent;
     color:#FBFBFB;
-    font-size:15px;
+    font-size:16px;
     /* input value should still be selectable for editing */
     -webkit-user-select: text;
     user-select: text;
@@ -488,9 +539,11 @@ body{
     transition:background .25s ease, box-shadow .25s ease, transform .15s ease, color .25s ease;
 }
 
-.chat-input button:hover{
-    transform:scale(1.06);
-    box-shadow:0 0 18px rgba(175,157,128,.78);
+@media (hover:hover){
+  .chat-input button:hover{
+      transform:scale(1.06);
+      box-shadow:0 0 18px rgba(175,157,128,.78);
+  }
 }
 
 .chat-input button:active{
@@ -519,11 +572,50 @@ body{
 @media (max-width: 768px){
   .chat-container{
      border-radius: 0;
+     max-width:100%;
+     margin:0;
+     left:0;
+     right:0;
   }
 
   .message{
      max-width: 85%;
      font-size: 14px;
+  }
+}
+@media (max-width: 480px){
+  .chat-history{ padding:16px; }
+  .welcome-screen h1{ font-size:26px; }
+  .welcome-screen p{ font-size:14px; }
+  .suggestions button{ max-width:100%; padding:12px 14px; }
+  .chat-input{ padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px)); }
+  .chat-input form{ padding:6px 6px 6px 16px; border-color:rgba(175,157,128,.30); box-shadow:0 0 0 1px rgba(175,157,128,.10), 0 0 14px rgba(175,157,128,.32), 0 8px 24px rgba(0,0,0,.45); }
+  .chat-input form:focus-within{ border-color:rgba(175,157,128,.65); box-shadow:0 0 0 1px rgba(175,157,128,.16), 0 0 20px rgba(175,157,128,.50), 0 8px 24px rgba(0,0,0,.5); }
+}
+@media (max-width: 360px){
+  .chat-header{ padding-left: calc(10px + env(safe-area-inset-left,0px)); padding-right: calc(10px + env(safe-area-inset-right,0px)); gap:8px; }
+  .header-text h2{ font-size:13px; }
+  .status{ display:none; }
+  .chat-history{ padding:12px; }
+}
+@media (max-height: 500px) and (orientation: landscape){
+  .welcome-screen{ min-height:auto; padding:12px 0; }
+  .fox-logo img{ width:96px; height:96px; }
+  .welcome-text{ margin-bottom:12px; }
+  .suggestions{ gap:8px; }
+  .suggestions button{ padding:10px 14px; font-size:13px; }
+}
+@media (min-width: 860px){
+  .chat-container{
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+    border-left:1px solid rgba(175,157,128,.15);
+    border-right:1px solid rgba(175,157,128,.15);
+    box-shadow: 0 0 40px rgba(0,0,0,.4);
+  }
+  .message{
+    max-width: clamp(520px, 62%, 640px);
   }
 }
 
@@ -620,10 +712,9 @@ body{
 }
 
 @media (prefers-reduced-motion:reduce){
-    .orb{
-        animation:none !important;
-        opacity:1;
-    }
+    .orb{ animation:none !important; opacity:1; }
+    .fox-logo, .welcome-text h1, .welcome-text p, .suggestions button, .hero-logo, .hero h1, .hero p{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .message{ animation:none !important; }
 }
 
 .circle-overlay{
@@ -633,14 +724,15 @@ body{
     z-index: 9999;
     pointer-events: none;
     clip-path: circle(var(--r, 0px) at var(--ox, 50%) var(--oy, 50%));
-    transition: clip-path .9s cubic-bezier(.65, 0, .35, 1);
+    transition: clip-path .65s cubic-bezier(.65, 0, .35, 1);
+    will-change: clip-path;
 }
 .circle-overlay.no-transition{
     transition: none;
 }
 
 @media (prefers-reduced-motion: reduce){
-    .circle-overlay{ transition:none; }
+    .circle-overlay{ transition:none; will-change:auto; }
 }
 
 /* Fox splash intro — transparan, tengah layar, FLIP mulus */
@@ -659,7 +751,7 @@ body{
     pointer-events: auto;
 }
 #foxSplash.is-active img{
-    animation: splashIn 1.2s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation: splashIn 0.7s cubic-bezier(.22, 1, .36, 1) forwards;
 }
 #foxSplash.is-out{
     display: grid;

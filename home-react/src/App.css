@@ -36,6 +36,9 @@ body{
     text-align:center;
     gap:10px;
     padding:24px;
+    padding-left: calc(24px + env(safe-area-inset-left, 0px));
+    padding-right: calc(24px + env(safe-area-inset-right, 0px));
+    padding-top: calc(24px + env(safe-area-inset-top, 0px));
 }
 
 .hero-logo{
@@ -45,11 +48,11 @@ body{
     margin-bottom:8px;
     opacity:0;
     animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay:1s;
+    animation-delay:0.6s;
 }
 
 .hero h1{
-    font-size:26px;
+    font-size:clamp(22px, 6vw, 26px);
     font-weight:700;
     background:linear-gradient(to left, var(--accent-a) 56%, var(--accent-b));
     -webkit-background-clip:text;
@@ -57,16 +60,17 @@ body{
     color:transparent;
     opacity:0;
     animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay:1.15s;
+    animation-delay:0.75s;
 }
 
 .hero p{
-    font-size:14px;
+    font-size:clamp(13px, 3.5vw, 14px);
     color: var(--text-secondary);
-    max-width:280px;
+    max-width:min(280px, 84vw);
+    padding:0 8px;
     opacity:0;
     animation: heroIn .8s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay:1.3s;
+    animation-delay:0.85s;
 }
 
 @keyframes heroIn{
@@ -76,8 +80,8 @@ body{
 
 .fox-floating{
     position: fixed;
-    left: 20px;
-    bottom: 20px;
+    left: calc(20px + env(safe-area-inset-left, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -97,13 +101,23 @@ body{
 }
 
 .fox-floating,
-.fox-floating:hover,
-.fox-floating:focus,
-.fox-floating:focus-visible,
 .fox-floating:active{
     outline: none !important;
     border: none !important;
     background: transparent !important;
+}
+.fox-floating:focus-visible{
+    outline: 2px solid #AF9D80 !important;
+    outline-offset: 3px;
+    border: none !important;
+    background: transparent !important;
+}
+@media (hover:hover){
+  .fox-floating:hover{
+      outline: none !important;
+      border: none !important;
+      background: transparent !important;
+  }
 }
 
 .fox-floating img{
@@ -132,7 +146,14 @@ body{
     transition: opacity .2s ease, transform .2s ease;
 }
 
-.fox-floating:hover .fox-tooltip{
+@media (hover:hover){
+  .fox-floating:hover .fox-tooltip{
+      opacity:1;
+      visibility:visible;
+      transform: translateY(50%) translateX(0);
+  }
+}
+.fox-floating:focus-visible .fox-tooltip{
     opacity:1;
     visibility:visible;
     transform: translateY(50%) translateX(0);
@@ -145,16 +166,17 @@ body{
     z-index: 9999;
     pointer-events: none;
     clip-path: circle(var(--r, 0px) at var(--ox, 50%) var(--oy, 50%));
-    transition: clip-path .9s cubic-bezier(.65, 0, .35, 1);
+    transition: clip-path .65s cubic-bezier(.65, 0, .35, 1);
+    will-change: clip-path;
 }
 .circle-overlay.no-transition{
     transition: none;
 }
 
 @media (prefers-reduced-motion: reduce){
-    .hero-logo, .hero h1, .hero p{ animation:none; opacity:1; }
+    .hero-logo, .hero h1, .hero p{ animation:none !important; opacity:1 !important; transform:none !important; }
     .fox-floating{ animation:none; }
-    .circle-overlay{ transition:none; }
+    .circle-overlay{ transition:none; will-change:auto; }
 }
 
 .welcome-message {

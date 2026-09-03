@@ -29,14 +29,17 @@ function App() {
       root.style.setProperty('--oy', `${y}px`)
     }
 
+    function safeGet(k){ try{ return sessionStorage.getItem(k); }catch{ return null; } }
+    function safeSet(k,v){ try{ sessionStorage.setItem(k,v); }catch{ /* ignore */ } }
+    function safeRemove(k){ try{ sessionStorage.removeItem(k); }catch{ /* ignore */ } }
     // Animasi saat kembali ke Home
     function playReturnAnimation() {
-      const phase = sessionStorage.getItem('foxTransitionPhase')
-      const backNav = sessionStorage.getItem('foxBackNavigation')
+      const phase = safeGet('foxTransitionPhase')
+      const backNav = safeGet('foxBackNavigation')
       
       if (phase === 'toHome' || backNav === 'true') {
-        const x = parseFloat(sessionStorage.getItem('foxOriginX'))
-        const y = parseFloat(sessionStorage.getItem('foxOriginY'))
+        const x = parseFloat(safeGet('foxOriginX'))
+        const y = parseFloat(safeGet('foxOriginY'))
         root.style.setProperty('--ox', `${x}px`)
         root.style.setProperty('--oy', `${y}px`)
 
@@ -50,10 +53,10 @@ function App() {
           })
         })
 
-        sessionStorage.removeItem('foxTransitionPhase')
-        sessionStorage.removeItem('foxBackNavigation')
-        sessionStorage.removeItem('foxOriginX')
-        sessionStorage.removeItem('foxOriginY')
+        safeRemove('foxTransitionPhase')
+        safeRemove('foxBackNavigation')
+        safeRemove('foxOriginX')
+        safeRemove('foxOriginY')
         
         delete fab.dataset.leaving
       }
@@ -101,9 +104,9 @@ function App() {
         )
       })
 
-      sessionStorage.setItem('foxOriginX', x)
-      sessionStorage.setItem('foxOriginY', y)
-      sessionStorage.setItem('foxTransitionPhase', 'toChat')
+      safeSet('foxOriginX', x)
+      safeSet('foxOriginY', y)
+      safeSet('foxTransitionPhase', 'toChat')
 
       let done = false
       let cleanupDone = false
@@ -136,20 +139,20 @@ function App() {
 
       overlay.addEventListener('transitionend', handleTransitionEnd)
 
-      // Navigate pas 70% animasi (sekitar 630ms dari 900ms)
+      // Navigate pas 70% animasi (455ms dari 650ms)
       // Supaya loading bar ketutupan overlay
-      fallbackTimer = setTimeout(goToChat, 630)
+      fallbackTimer = setTimeout(goToChat, 455)
     }
 
     fab.addEventListener('click', handleClick)
 
     const handlePopState = () => {
-      const phase = sessionStorage.getItem('foxTransitionPhase')
-      const backNav = sessionStorage.getItem('foxBackNavigation')
+      const phase = safeGet('foxTransitionPhase')
+      const backNav = safeGet('foxBackNavigation')
       if (phase === 'toHome' || backNav === 'true') {
         playReturnAnimation()
       }
-      history.pushState(null, '', location.href)
+      try{ history.pushState(null, '', location.href) }catch{ /* ignore */ }
     }
 
     window.addEventListener('popstate', handlePopState)

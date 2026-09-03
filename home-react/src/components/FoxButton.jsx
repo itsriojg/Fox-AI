@@ -6,6 +6,7 @@ const FoxButton = forwardRef(function FoxButton(_, ref) {
       ref={ref}
       className="fox-floating"
       type="button"
+      aria-label="Buka Fox AI Chatbot"
     >
       <img
         src="/react-assets/assets/floating-button-fox-ai.png"

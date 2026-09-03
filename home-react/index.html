@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1C1F23" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,10 +38,12 @@
       // pas balik dari chatbot (phase 'toHome'), biar reverse-nya mulus tanpa jeda
       (function(){
         var overlay = document.getElementById('circleOverlay');
-        if (sessionStorage.getItem('foxTransitionPhase') !== 'toHome') return;
+        var phase = null;
+        try { phase = sessionStorage.getItem('foxTransitionPhase'); } catch(e) {}
+        if (phase !== 'toHome') return;
 
-        var x = parseFloat(sessionStorage.getItem('foxOriginX'));
-        var y = parseFloat(sessionStorage.getItem('foxOriginY'));
+        var x = null, y = null;
+        try { x = parseFloat(sessionStorage.getItem('foxOriginX')); y = parseFloat(sessionStorage.getItem('foxOriginY')); } catch(e) {}
         if (isNaN(x) || isNaN(y)) return;
 
         var vw = window.innerWidth, vh = window.innerHeight;

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#1C1F23">
 
     <title>Fox AI</title>
@@ -30,10 +30,11 @@
 <div class="circle-overlay" id="circleOverlay"></div>
 <script>
   (function(){
-    var phase = sessionStorage.getItem('foxTransitionPhase');
+    var phase = null;
+    try { phase = sessionStorage.getItem('foxTransitionPhase'); } catch(e) {}
     if (phase !== 'toChat') return;
-    var x = parseFloat(sessionStorage.getItem('foxOriginX'));
-    var y = parseFloat(sessionStorage.getItem('foxOriginY'));
+    var x = null, y = null;
+    try { x = parseFloat(sessionStorage.getItem('foxOriginX')); y = parseFloat(sessionStorage.getItem('foxOriginY')); } catch(e) {}
     if (isNaN(x) || isNaN(y)) return;
     var vw = window.innerWidth, vh = window.innerHeight;
     var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
@@ -51,12 +52,12 @@
 
     <!-- Header -->
     <div class="chat-header">
-        <button class="back-button" id="back-button">
+        <button class="back-button" id="back-button" aria-label="Kembali ke Home">
             ←
         </button>
         <div class="header-info">
             <div class="header-logo">
-              <img src="/static/assets/fox-logo.png" alt="Fox AI Logo">
+              <img src="/static/assets/fox-logo.png" alt="Fox AI Logo" width="42" height="42" loading="eager" decoding="async">
             </div>
             <div class="header-text">
                 <h2>Fox AI</h2>
@@ -70,17 +71,17 @@
             <span>Online</span>
         </div>
         <form id="clear-form">
-          <button class="clear-button" type="submit" id="clear-button" {% if not riwayat_chat %}disabled{% endif %}>
+          <button class="clear-button" type="submit" id="clear-button" aria-label="Hapus riwayat chat" {% if not riwayat_chat %}disabled{% endif %}>
             🗑
           </button>
         </form>
     </div>
     <div class="header-glow"></div>
     <!-- Chat Area -->
-    <div class="chat-history">
+    <div class="chat-history" role="log" aria-live="polite" aria-label="Riwayat chat">
     <div class="welcome-screen">
       <div class="fox-logo">
-        <img src="/static/assets/fox-logo.png" alt="Fox AI Logo">
+        <img src="/static/assets/fox-logo.png" alt="Fox AI Logo" width="180" height="180" loading="eager" decoding="async">
       </div>
       <div class="welcome-text">
         <h1>Welcome to Fox AI</h1>
@@ -105,8 +106,11 @@
                 name="pesan"
                 placeholder="Tanya apapun pada Fox AI..."
                 autocomplete="off"
+                enterkeyhint="send"
+                inputmode="text"
+                aria-label="Tulis pesan untuk Fox AI"
             >
-            <button type="submit" disabled>
+            <button type="submit" disabled aria-label="Kirim pesan">
                 ➜
             </button>
         </form>

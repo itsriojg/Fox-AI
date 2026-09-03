@@ -10,7 +10,9 @@ const backButton = document.querySelector("#back-button");
 const overlay = document.querySelector("#circleOverlay");
 const root = document.documentElement;
 
-window.onunload = () => {};
+function safeGet(key){ try{ return sessionStorage.getItem(key); }catch(e){ return null; } }
+function safeSet(key,val){ try{ sessionStorage.setItem(key,val); }catch(e){} }
+function safeRemove(key){ try{ sessionStorage.removeItem(key); }catch(e){} }
 
 const splash = document.getElementById('foxSplash');
 const splashImg = splash ? splash.querySelector('img') : null;
@@ -54,7 +56,7 @@ function flipToWelcome(doneCb){
   const dx = tCx - sCx;
   const dy = tCy - sCy;
   const scale = tRect.width / sRect.width;
-  splashImg.style.transition = 'transform .5s cubic-bezier(.65, 0, .35, 1)';
+  splashImg.style.transition = 'transform .4s cubic-bezier(.65, 0, .35, 1)';
   splashImg.getBoundingClientRect();
   splashImg.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
   let finished = false;
@@ -74,7 +76,7 @@ function flipToWelcome(doneCb){
     finish();
   }
   splashImg.addEventListener('transitionend', onEnd);
-  const fallback = setTimeout(finish, 600);
+  const fallback = setTimeout(finish, 500);
   splashTimers.push(fallback);
 }
 function playFoxSplash(){
@@ -89,7 +91,7 @@ function playFoxSplash(){
     splash.classList.remove('is-active');
     splash.classList.add('is-out');
     flipToWelcome();
-  }, 1800);
+  }, 900);
   splashTimers.push(tHold);
   const skip = () => {
     clearSplashTimers();
@@ -103,7 +105,7 @@ function playFoxSplash(){
 
 // hanya reset ke 0 kalau bukan arrival dari home (toChat)
 // kalau toChat, --r sudah di-set max di inline script chatbot.html biar overlay ketutup sebelum paint
-const _isToChatArrival = sessionStorage.getItem('foxTransitionPhase') === 'toChat';
+const _isToChatArrival = safeGet('foxTransitionPhase') === 'toChat';
 if (!_isToChatArrival) {
   root.style.setProperty('--r', '0px');
   overlay.style.removeProperty('--r');
@@ -136,10 +138,10 @@ function maxRadiusFrom(x, y){
     });
   });
 
-  sessionStorage.removeItem('foxTransitionPhase');
+  safeRemove('foxTransitionPhase');
 
   if (!needsSplash) {
-    // tanpa splash, reveal setelah circle selesai (0.9s) biar welcome tidak flash
+    // tanpa splash, reveal setelah circle selesai (0.65s) biar welcome tidak flash
     let revealed = false;
     const doReveal = () => {
       if (revealed) return;
@@ -152,14 +154,14 @@ function maxRadiusFrom(x, y){
       doReveal();
     }
     overlay.addEventListener('transitionend', onEnd);
-    const fb = setTimeout(doReveal, 950);
+    const fb = setTimeout(doReveal, 700);
     splashTimers.push(fb);
   }
 })();
 
 function handleBackNavigation() {
-  const x = parseFloat(sessionStorage.getItem('foxOriginX'));
-  const y = parseFloat(sessionStorage.getItem('foxOriginY'));
+  const x = parseFloat(safeGet('foxOriginX'));
+  const y = parseFloat(safeGet('foxOriginY'));
 
   if (Number.isNaN(x) || Number.isNaN(y)) {
     window.location.href = "/";
@@ -182,7 +184,7 @@ function handleBackNavigation() {
     root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
   });
 
-  sessionStorage.setItem('foxTransitionPhase', 'toHome');
+  safeSet('foxTransitionPhase', 'toHome');
 
   function onEnd(e) {
     if (e.propertyName !== 'clip-path') return
@@ -206,29 +208,27 @@ function handleBackNavigation() {
     if (done) return;
     done = true;
     cleanup();
-    history.replaceState(null, '', '/');
+    try{ history.replaceState(null, '', '/'); }catch(e){}
     window.location.href = "/";
   };
 
-  // Navigate pas 70% animasi (630ms dari 900ms)
+  // Navigate pas 70% animasi (455ms dari 650ms)
   // Supaya loading bar ketutupan overlay
-  fallbackTimer = setTimeout(goHome, 630);
+  fallbackTimer = setTimeout(goHome, 455);
 }
 
 backButton.addEventListener("click", handleBackNavigation);
 
-// Handle mobile back button via beforeunload
-window.addEventListener('beforeunload', () => {
-  // Jika page unloading karena back button, set flag
-  // Note: tidak bisa detect pasti back button vs other navigation
-  if (!sessionStorage.getItem('foxTransitionPhase')) {
-    sessionStorage.setItem('foxBackNavigation', 'true');
+// Handle mobile back button via pagehide (lebih aman dari beforeunload untuk BFCache)
+window.addEventListener('pagehide', () => {
+  if (!safeGet('foxTransitionPhase')) {
+    safeSet('foxBackNavigation', 'true');
   }
 });
 
 // Fallback: pageshow untuk BFCache scenario
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted && sessionStorage.getItem('foxTransitionPhase') === 'toChat') {
+  if (event.persisted && safeGet('foxTransitionPhase') === 'toChat') {
     const needsSplash = shouldShowSplash(true);
     overlay.style.removeProperty('--r');
     requestAnimationFrame(() => {
@@ -242,7 +242,7 @@ window.addEventListener('pageshow', (event) => {
         }
       });
     });
-    sessionStorage.removeItem('foxTransitionPhase');
+    safeRemove('foxTransitionPhase');
     if (!needsSplash) {
       let revealed = false;
       const doReveal = () => {
@@ -256,18 +256,49 @@ window.addEventListener('pageshow', (event) => {
         doReveal();
       }
       overlay.addEventListener('transitionend', onEnd);
-      const fb = setTimeout(doReveal, 950);
+      const fb = setTimeout(doReveal, 700);
       splashTimers.push(fb);
     }
+  } else if (event.persisted && !safeGet('foxTransitionPhase')) {
+    // BFCache restore normal — jangan paksa redirect ke '/', cukup reveal welcome
+    // biar ga blackscreen (fix: sebelumnya window.location.href='/' bikin loop)
+    root.style.setProperty('--r', '0px');
+    overlay.style.removeProperty('--r');
+    overlay.classList.remove('no-transition');
+    revealWelcome();
   }
 });
 
-// Mencegah blackscreen jika browser restore /chatbot dari BFCache
-window.addEventListener('pageshow', (event) => {
-  if (event.persisted && !sessionStorage.getItem('foxTransitionPhase')) {
-    window.location.href = '/';
+// visualViewport keyboard handling — biar chat-history ga ke-hide pas keyboard iOS naik
+(function(){
+  const chatHistory = document.querySelector(".chat-history");
+  const chatInput = document.querySelector("#chat-input");
+  if (!chatHistory) return;
+  function handleViewportResize(){
+    // delay 1 frame biar viewport udah settle
+    requestAnimationFrame(() => scrollkebawah());
   }
-});
+  if (window.visualViewport){
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+    window.visualViewport.addEventListener('scroll', handleViewportResize);
+  }
+  if (chatInput){
+    chatInput.addEventListener('focus', () => {
+      setTimeout(() => {
+        chatInput.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        scrollkebawah();
+      }, 300);
+    });
+  }
+  // fix dvh fallback untuk browser yang ga support dvh
+  function setVh(){
+    if (CSS.supports('height: 100dvh')) return;
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+  setVh();
+  window.addEventListener('resize', setVh);
+})();
 
 suggestions.forEach((button)=>{
   button.addEventListener("click", ()=>{
