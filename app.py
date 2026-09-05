@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, redirect, jsonify, send_from_directory, session, Response, stream_with_context
+from flask import Flask, render_template, request, redirect, jsonify, session, Response, stream_with_context
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from chatbot import get_reply, build_rag_prompt
@@ -56,12 +56,8 @@ def health():
 
 @app.route("/")
 def home():
-  return send_from_directory("home-react/dist", "index.html")
+  return render_template("home.html")
 
-@app.route("/react-assets/<path:filename>")
-def react_assets(filename):
-    return send_from_directory("home-react/dist", filename)
-  
 @app.route("/chatbot")
 def chatbot():
   return render_template(

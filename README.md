@@ -1,18 +1,18 @@
-# Fox AI
+# Mintif
 
 <p align="center">
-  <img src="home-react/public/assets/fox-logo.png" alt="Fox AI Logo" width="120">
+  <img src="static/assets/arthasa-logo.png" alt="Arthasa Logo" width="120">
 </p>
 
-**Chatbot asisten dengan RAG untuk organisasi dan akademik · RAG-powered assistant chatbot for organizations and academics**
+**Chatbot asisten HIMATIF dengan RAG · RAG-powered HIMATIF assistant chatbot**
 
 ---
 
 ## Project Overview / Tentang Project
 
-**🇮🇩** Fox AI itu chatbot asisten yang gue buat buat jawab pertanyaan seputar organisasi, akademik, dan materi perkuliahan. Konsepnya pakai RAG (Retrieval-Augmented Generation). Jadi gini, dokumen sumber dalam bentuk PDF dipecah jadi potongan kecil (chunk), lalu diubah jadi embedding, terus dicari secara semantik sebelum model AI nyusun jawaban. Setiap pengguna juga punya riwayat chat sendiri yang diisolasi pakai session cookie, jadi nggak saling ngacak.
+**🇮🇩** Mintif (Admin Teknologi Informasi) itu chatbot asisten HIMATIF yang gue buat buat jawab pertanyaan seputar HIMATIF (sejarah, struktur, kegiatan, ARTHASA). Konsepnya pakai RAG (Retrieval-Augmented Generation). Jadi gini, dokumen sumber dalam bentuk PDF dipecah jadi potongan kecil (chunk) per bab, lalu diubah jadi embedding, terus dicari secara semantik sebelum model AI nyusun jawaban. Setiap pengguna juga punya riwayat chat sendiri yang diisolasi pakai session cookie, jadi nggak saling ngacak.
 
-**🇬🇧** Fox AI is an assistant chatbot I built to answer questions about organizations, academics, and course material. It uses a RAG (Retrieval-Augmented Generation) pipeline: source PDFs are split into small chunks, turned into embeddings, then searched semantically before the AI model writes an answer. Every user also gets their own chat history, isolated via session cookies.
+**🇬🇧** Mintif (Admin Teknologi Informasi) is a HIMATIF assistant chatbot I built to answer questions about HIMATIF (history, structure, events, ARTHASA). It uses a RAG (Retrieval-Augmented Generation) pipeline: source PDFs are split into small per-section chunks, turned into embeddings, then searched semantically before the AI model writes an answer. Every user also gets their own chat history, isolated via session cookies.
 
 ---
 
@@ -40,9 +40,9 @@
 
 ## 🛠️ Tech Stack
 
-**🇮🇩** Backend-nya Python (Flask). Buat retrieval pake FAISS + SQLite, embedding dari Jina AI, terus LLM-nya lewat 9router (router dengan fallback otomatis) yang meneruskan ke Groq, pakai SDK yang OpenAI-compatible. Frontend-nya React (Vite) untuk halaman utama, dan vanilla JavaScript untuk chatbot.
+**🇮🇩** Backend-nya Python (Flask). Buat retrieval pake FAISS + SQLite, embedding dari Jina AI, terus LLM-nya lewat 9router (router dengan fallback otomatis) yang meneruskan ke Groq, pakai SDK yang OpenAI-compatible. Frontend-nya vanilla JavaScript + CSS buat halaman utama dan chatbot (dulu React, udah dimigrasi penuh, arsipnya di branch `arsip/home-react` + release `react-final`).
 
-**🇬🇧** Python (Flask) backend. FAISS + SQLite for retrieval, Jina AI for embeddings, and the LLM runs through 9router (a router with automatic fallback) which forwards to Groq, using an OpenAI-compatible SDK. The frontend is React (Vite) for the home page and vanilla JavaScript for the chatbot.
+**🇬🇧** Python (Flask) backend. FAISS + SQLite for retrieval, Jina AI for embeddings, and the LLM runs through 9router (a router with automatic fallback) which forwards to Groq, using an OpenAI-compatible SDK. The frontend is vanilla JavaScript + CSS for both the home page and the chatbot (previously React, fully migrated; archived in the `arsip/home-react` branch + `react-final` release).
 
 | Layer | Teknologi |
 |---|---|
@@ -52,7 +52,7 @@
 | Embedding | Jina AI `jina-embeddings-v5-text-small` (1024-d) |
 | LLM | 9router `GPT-120B-Fallback` (fallback otomatis) / Groq `openai/gpt-oss-120b` via openai SDK |
 | PDF | pypdf |
-| Frontend | React 19 + Vite 8 (home), vanilla JS + CSS (chatbot) |
+| Frontend | Vanilla JS + CSS (home + chatbot) |
 
 ---
 
@@ -61,7 +61,7 @@
 **🇮🇩**
 
 ```
-PDF -> clean_text -> chunking (sekitar 800 karakter)
+PDF -> clean_text -> chunking per bab (heading 1-6 + sub-split, 400-800 karakter)
                        |
                        v
                 SQLite (chunk + sumber)         FAISS index (embedding)
@@ -74,7 +74,7 @@ PDF -> clean_text -> chunking (sekitar 800 karakter)
                         Prompt -> Groq LLM -> Jawaban
 ```
 
-1. **Ingestion**, PDF dibaca (pypdf), dibersihin, lalu dipecah jadi chunk sekitar 800 karakter.
+1. **Ingestion**, PDF dibaca (pypdf), dibersihin (dedup header tabel, fix artefak spasi, em-dash jadi hyphen), lalu dipecah per bab mengikuti heading bernomor, bab yang panjang dipecah lagi per sub-bagian sampai 400-800 karakter.
 2. **Indexing**, tiap chunk di-embedding (Jina), disimpan di SQLite, dan vector-nya masuk ke index FAISS. Pakai `IndexIDMap` biar id-nya sinkron sama database.
 3. **Query**, pertanyaan user di-embedding lalu dicari secara cosine (ambil 5 teratas). Chunk yang relevan digabung jadi context.
 4. **Generation**, context + riwayat chat (10 pesan terakhir) + system prompt dikirim ke 9router (fallback otomatis), lalu jawabannya disimpan ke history user.
@@ -82,7 +82,7 @@ PDF -> clean_text -> chunking (sekitar 800 karakter)
 **🇬🇧**
 
 ```
-PDF -> clean_text -> chunking (~800 chars)
+PDF -> clean_text -> per-section chunking (numbered headings + sub-split, 400-800 chars)
                        |
                        v
                 SQLite (chunk + source)         FAISS index (embedding)
@@ -95,7 +95,7 @@ PDF -> clean_text -> chunking (~800 chars)
                         Prompt -> Groq LLM -> Answer
 ```
 
-1. **Ingestion**, PDFs are read (pypdf), cleaned, and split into ~800-char chunks.
+1. **Ingestion**, PDFs are read (pypdf), cleaned (table-header dedup, spacing-artefact fixes, em-dash to hyphen), and split per section following numbered headings, long sections sub-split to 400-800 chars.
 2. **Indexing**, each chunk is embedded (Jina), stored in SQLite, and its vector goes into the FAISS index. `IndexIDMap` keeps the ids in sync with the database.
 3. **Query**, the user question is embedded and searched with cosine similarity (top 5). Relevant chunks become the context.
 4. **Generation**, context + chat history (last 10 messages) + system prompt are sent to 9router (automatic fallback), and the answer is stored in the user's history.
@@ -104,9 +104,9 @@ PDF -> clean_text -> chunking (~800 chars)
 
 ## 📱 Full Android Development
 
-**🇮🇩** Ini bagian yang paling bikin project ini beda: seluruh Fox AI dikembangin di dalam Android, bukan di PC.
+**🇮🇩** Ini bagian yang paling bikin project ini beda: seluruh codebase Mintif dikembangin di dalam Android, bukan di PC.
 
-> Penting: Android di sini itu environment development, bukan platform target. Ini bukan aplikasi Android. Fox AI tetaplah aplikasi web full-stack biasa, cuma kodenya ditulis, dites, dan di-debug dari Android.
+> Penting: Android di sini itu environment development, bukan platform target. Ini bukan aplikasi Android. Mintif tetaplah aplikasi web full-stack biasa, cuma kodenya ditulis, dites, dan di-debug dari Android.
 
 **Setup development yang dipakai:**
 
@@ -115,7 +115,7 @@ PDF -> clean_text -> chunking (~800 chars)
 | Linux environment | Termux + Andronix |
 | Version control | Git (clone, branch, commit, push ke GitHub) |
 | Backend | Python + Flask, virtualenv |
-| Frontend | Node.js/npm, Vite, React |
+| Frontend | Node.js/npm (untuk 9router produksi, repo terpisah) |
 | Code editor (opsional) | Acode |
 
 **Keterbatasan environment yang berhasil diatasi:**
@@ -126,9 +126,9 @@ PDF -> clean_text -> chunking (~800 chars)
 
 Ini bukan gimmick, ini constraint engineering yang nyata. Setiap fix bug, refactor, dan fitur di repo ini lahir dari Android.
 
-**🇬🇧** This is what makes this project different: the entire Fox AI codebase was developed on an Android device, not on a PC.
+**🇬🇧** This is what makes this project different: the entire Mintif codebase was developed on an Android device, not on a PC.
 
-> Important: Android here is the development environment, not the target platform. This is not an Android app. Fox AI is still a regular full-stack web application, it just happens to be written, tested, and debugged from Android.
+> Important: Android here is the development environment, not the target platform. This is not an Android app. Mintif is still a regular full-stack web application, it just happens to be written, tested, and debugged from Android.
 
 **Development setup used:**
 
@@ -137,7 +137,7 @@ Ini bukan gimmick, ini constraint engineering yang nyata. Setiap fix bug, refact
 | Linux environment | Termux + Andronix |
 | Version control | Git (clone, branch, commit, push to GitHub) |
 | Backend | Python + Flask, virtualenv |
-| Frontend | Node.js/npm, Vite, React |
+| Frontend | Node.js/npm (untuk 9router produksi, repo terpisah) |
 | Code editor (optional) | Acode |
 
 **Environment constraints that were overcome:**
@@ -152,21 +152,21 @@ This isn't a gimmick, it's a real engineering constraint. Every bug fix, refacto
 
 ## 💻 Supported Platforms
 
-**🇮🇩** Karena Fox AI itu aplikasi web biasa, dia bisa dijalankan dan dikembangin di hampir semua platform selama environment dan dependency-nya keinstall:
+**🇮🇩** Karena Mintif itu aplikasi web biasa, dia bisa dijalankan dan dikembangin di hampir semua platform selama environment dan dependency-nya keinstall:
 
-- **Windows**, Python 3.8+, Node.js (opsional, cuma buat rebuild frontend).
-- **macOS**, Python 3.8+, Node.js.
-- **Linux**, Python 3.8+, Node.js.
-- **Android**, Termux (+ Andronix), Python, Node.js/npm, Git, dan Acode sebagai editor opsional.
+- **Windows**, Python 3.8+, Node.js (untuk 9router produksi, repo terpisah).
+- **macOS**, Python 3.8+, Node.js (untuk 9router produksi, repo terpisah).
+- **Linux**, Python 3.8+, Node.js (untuk 9router produksi, repo terpisah).
+- **Android**, Termux (+ Andronix), Python, Node.js/npm (untuk 9router produksi, repo terpisah), Git, dan Acode sebagai editor opsional.
 
 Developer lain cukup `git clone` terus ikutin panduan di bawah, bisa langsung dikembangin dari Android dengan cara yang sama.
 
-**🇬🇧** Since Fox AI is a regular web application, it runs and can be developed on almost any platform as long as the environment and dependencies are installed:
+**🇬🇧** Since Mintif is a regular web application, it runs and can be developed on almost any platform as long as the environment and dependencies are installed:
 
-- **Windows**, Python 3.8+, Node.js (optional, only to rebuild the frontend).
-- **macOS**, Python 3.8+, Node.js.
-- **Linux**, Python 3.8+, Node.js.
-- **Android**, Termux (+ Andronix), Python, Node.js/npm, Git, and Acode as optional editor.
+- **Windows**, Python 3.8+, Node.js (for production 9router, separate repo).
+- **macOS**, Python 3.8+, Node.js (for production 9router, separate repo).
+- **Linux**, Python 3.8+, Node.js (for production 9router, separate repo).
+- **Android**, Termux (+ Andronix), Python, Node.js/npm (for production 9router, separate repo), Git, and Acode as optional editor.
 
 Other developers can just `git clone` and follow the guide below, and can even develop from Android the exact same way.
 
@@ -192,9 +192,9 @@ pillow-fox/
 ├── prompt.py            # System prompt for the AI
 ├── requirements.txt
 ├── templates/
+│   ├── home.html        # Halaman utama (vanilla JS)
 │   └── chatbot.html     # Chatbot UI (vanilla JS)
-├── static/              # chatbot.css, chatbot.js, assets
-├── home-react/          # React home page (Vite), builds to dist/
+├── static/              # home.css, home.js, chatbot.css, chatbot.js, assets
 └── knowledge/pdf/       # Source documents (PDFs)
 ```
 
@@ -217,16 +217,10 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env            # isi API key-nya, lihat tabel di bawah
 
-# 3. Frontend (opsional, cuma kalau ubah halaman React)
-cd home-react
-npm install
-npm run build
-cd ..
-
-# 4. Jalankan (mode development)
+# 3. Jalankan (mode development)
 python app.py                   # buka http://localhost:5000
 
-# 5. Jalankan (mode production)
+# 4. Jalankan (mode production)
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
 
@@ -283,7 +277,7 @@ Cek health: `curl http://localhost:5000/health` -> `{"status":"ok"}`.
 1. **Dari template jadi full-stack**, layout chatbot dasar, terus responsive, terus UI/UX lengkap.
 2. **Migrasi integrasi AI**, dari fetch API langsung ke SDK OpenAI-compatible, dengan timeout dan error handling yang makin rapi.
 3. **RAG pipeline dari nol**, PDF ke chunk ke FAISS, terus di-harden: mapping id SQLite ke FAISS pakai `IndexIDMap`, normalisasi embedding (cosine), dan proses build knowledge yang aman dari kegagalan.
-4. **Frontend React**, halaman utama pindah ke React (Vite) dengan animasi circle reveal ke chatbot.
+4. **Frontend vanilla**, halaman utama dimigrasi balik dari React (Vite) ke vanilla JS + CSS dengan animasi circle reveal yang sama (arsip React: branch `arsip/home-react` + release `react-final`).
 5. **Multi-user**, history chat dipisah per user pakai session cookie, lengkap dengan migrasi tabel otomatis.
 6. **Production-ready**, gunicorn, health check, dan bind host/port lewat environment.
 
@@ -292,7 +286,7 @@ Cek health: `curl http://localhost:5000/health` -> `{"status":"ok"}`.
 1. **From template to full-stack**, basic chatbot layout, then responsive, then complete UI/UX.
 2. **AI integration migration**, from raw fetch API to the OpenAI-compatible SDK, with better timeout and error handling.
 3. **RAG pipeline from scratch**, PDF to chunk to FAISS, then hardened: SQLite to FAISS id mapping with `IndexIDMap`, embedding normalization (cosine), and a failure-safe knowledge build.
-4. **React frontend**, the home page moved to React (Vite) with a circle reveal transition to the chatbot.
+4. **Vanilla frontend**, the home page was migrated back from React (Vite) to vanilla JS + CSS with the same circle reveal transition (React archive: `arsip/home-react` branch + `react-final` release).
 5. **Multi-user**, chat history isolated per user with session cookies, including automatic table migration.
 6. **Production-ready**, gunicorn, health check, and host/port binding via environment.
 
@@ -321,7 +315,7 @@ Cek health: `curl http://localhost:5000/health` -> `{"status":"ok"}`.
 - Tambah test suite otomatis (pytest) buat endpoint dan RAG.
 - Migrasi database ke PostgreSQL buat skala lebih gede dan concurrency tulis lebih tinggi.
 - Fitur unggah dokumen lewat UI (folder `uploads/` udah disiapin).
-- Migrasi halaman chatbot ke React biar satu codebase.
+- Rombak UI chatbot dengan identitas Arthasa (avatar, aksen marun, FAQ).
 - Rate limiting di endpoint chat.
 
 **🇬🇧** Realistic ideas to continue with:
@@ -329,7 +323,7 @@ Cek health: `curl http://localhost:5000/health` -> `{"status":"ok"}`.
 - Add an automated test suite (pytest) for endpoints and RAG.
 - Migrate to PostgreSQL for larger scale and higher write concurrency.
 - Document upload feature via the UI (the `uploads/` folder is already in place).
-- Migrate the chatbot page to React for a single codebase.
+- Rework the chatbot UI with the Arthasa identity (avatar, maroon accents, FAQ).
 - Rate limiting on the chat endpoint.
 
 ---

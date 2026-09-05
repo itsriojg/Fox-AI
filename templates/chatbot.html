@@ -31,10 +31,10 @@
 <script>
   (function(){
     var phase = null;
-    try { phase = sessionStorage.getItem('foxTransitionPhase'); } catch(e) {}
+    try { phase = sessionStorage.getItem('mintifTransitionPhase'); } catch(e) {}
     if (phase !== 'toChat') return;
     var x = null, y = null;
-    try { x = parseFloat(sessionStorage.getItem('foxOriginX')); y = parseFloat(sessionStorage.getItem('foxOriginY')); } catch(e) {}
+    try { x = parseFloat(sessionStorage.getItem('mintifOriginX')); y = parseFloat(sessionStorage.getItem('mintifOriginY')); } catch(e) {}
     if (isNaN(x) || isNaN(y)) return;
     var vw = window.innerWidth, vh = window.innerHeight;
     var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));

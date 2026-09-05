@@ -105,7 +105,7 @@ function playMintifSplash(){
 
 // hanya reset ke 0 kalau bukan arrival dari home (toChat)
 // kalau toChat, --r sudah di-set max di inline script chatbot.html biar overlay ketutup sebelum paint
-const _isToChatArrival = safeGet('foxTransitionPhase') === 'toChat';
+const _isToChatArrival = safeGet('mintifTransitionPhase') === 'toChat';
 if (!_isToChatArrival) {
   root.style.setProperty('--r', '0px');
   overlay.style.removeProperty('--r');
@@ -138,7 +138,7 @@ function maxRadiusFrom(x, y){
     });
   });
 
-  safeRemove('foxTransitionPhase');
+  safeRemove('mintifTransitionPhase');
 
   if (!needsSplash) {
     // tanpa splash, reveal setelah circle selesai (0.65s) biar welcome tidak flash
@@ -160,8 +160,8 @@ function maxRadiusFrom(x, y){
 })();
 
 function handleBackNavigation() {
-  const x = parseFloat(safeGet('foxOriginX'));
-  const y = parseFloat(safeGet('foxOriginY'));
+  const x = parseFloat(safeGet('mintifOriginX'));
+  const y = parseFloat(safeGet('mintifOriginY'));
 
   if (Number.isNaN(x) || Number.isNaN(y)) {
     window.location.href = "/";
@@ -184,7 +184,7 @@ function handleBackNavigation() {
     root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
   });
 
-  safeSet('foxTransitionPhase', 'toHome');
+  safeSet('mintifTransitionPhase', 'toHome');
 
   function onEnd(e) {
     if (e.propertyName !== 'clip-path') return
@@ -221,14 +221,14 @@ backButton.addEventListener("click", handleBackNavigation);
 
 // Handle mobile back button via pagehide (lebih aman dari beforeunload untuk BFCache)
 window.addEventListener('pagehide', () => {
-  if (!safeGet('foxTransitionPhase')) {
-    safeSet('foxBackNavigation', 'true');
+  if (!safeGet('mintifTransitionPhase')) {
+    safeSet('mintifBackNavigation', 'true');
   }
 });
 
 // Fallback: pageshow untuk BFCache scenario
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted && safeGet('foxTransitionPhase') === 'toChat') {
+  if (event.persisted && safeGet('mintifTransitionPhase') === 'toChat') {
     const needsSplash = shouldShowSplash(true);
     overlay.style.removeProperty('--r');
     requestAnimationFrame(() => {
@@ -242,7 +242,7 @@ window.addEventListener('pageshow', (event) => {
         }
       });
     });
-    safeRemove('foxTransitionPhase');
+    safeRemove('mintifTransitionPhase');
     if (!needsSplash) {
       let revealed = false;
       const doReveal = () => {
@@ -259,7 +259,7 @@ window.addEventListener('pageshow', (event) => {
       const fb = setTimeout(doReveal, 700);
       splashTimers.push(fb);
     }
-  } else if (event.persisted && !safeGet('foxTransitionPhase')) {
+  } else if (event.persisted && !safeGet('mintifTransitionPhase')) {
     // BFCache restore normal — jangan paksa redirect ke '/', cukup reveal welcome
     // biar ga blackscreen (fix: sebelumnya window.location.href='/' bikin loop)
     root.style.setProperty('--r', '0px');
