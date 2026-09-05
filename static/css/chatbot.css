@@ -276,7 +276,7 @@ body{
     gap:0;
 }
 
-.fox-logo{
+.mintif-logo{
     filter:none;
     opacity:0;
     margin-bottom:-12px;
@@ -284,7 +284,7 @@ body{
     animation-delay: 0.2s;
 }
 
-.fox-logo img{
+.mintif-logo img{
     width: clamp(120px, 38vw, 180px);
     height: clamp(120px, 38vw, 180px);
     object-fit: contain;
@@ -600,7 +600,7 @@ body{
 }
 @media (max-height: 500px) and (orientation: landscape){
   .welcome-screen{ min-height:auto; padding:12px 0; }
-  .fox-logo img{ width:96px; height:96px; }
+  .mintif-logo img{ width:96px; height:96px; }
   .welcome-text{ margin-bottom:12px; }
   .suggestions{ gap:8px; }
   .suggestions button{ padding:10px 14px; font-size:13px; }
@@ -713,7 +713,7 @@ body{
 
 @media (prefers-reduced-motion:reduce){
     .orb{ animation:none !important; opacity:1; }
-    .fox-logo, .welcome-text h1, .welcome-text p, .suggestions button, .hero-logo, .hero h1, .hero p{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .mintif-logo, .welcome-text h1, .welcome-text p, .suggestions button, .hero-logo, .hero h1, .hero p{ animation:none !important; opacity:1 !important; transform:none !important; }
     .message{ animation:none !important; }
 }
 
@@ -735,8 +735,8 @@ body{
     .circle-overlay{ transition:none; will-change:auto; }
 }
 
-/* Fox splash intro — transparan, tengah layar, FLIP mulus */
-#foxSplash{
+/* Mintif splash intro — transparan, tengah layar, FLIP mulus */
+#mintifSplash{
     position: fixed;
     inset: 0;
     background: transparent;
@@ -746,18 +746,18 @@ body{
     opacity: 1;
     pointer-events: none;
 }
-#foxSplash.is-active{
+#mintifSplash.is-active{
     display: grid;
     pointer-events: auto;
 }
-#foxSplash.is-active img{
+#mintifSplash.is-active img{
     animation: splashIn 0.7s cubic-bezier(.22, 1, .36, 1) forwards;
 }
-#foxSplash.is-out{
+#mintifSplash.is-out{
     display: grid;
     pointer-events: none;
 }
-#foxSplash img{
+#mintifSplash img{
     width: min(90vmin, 560px);
     height: min(90vmin, 560px);
     object-fit: contain;
@@ -775,12 +775,12 @@ body{
     to{ opacity:1; transform:scale(1); }
 }
 /* pause welcome sampai splash selesai → body.welcome-ready baru jalan */
-body:not(.welcome-ready) .fox-logo{ opacity:0; animation:none !important; }
+body:not(.welcome-ready) .mintif-logo{ opacity:0; animation:none !important; }
 body:not(.welcome-ready) .welcome-text h1,
 body:not(.welcome-ready) .welcome-text p,
 body:not(.welcome-ready) .suggestions button{ opacity:0; animation:none !important; }
 /* setelah splash, logo langsung nongol tanpa delay biar seamless, teks tetap stagger */
-body.welcome-ready.splash-done .fox-logo{ opacity:1; animation:none !important; transform:none; }
+body.welcome-ready.splash-done .mintif-logo{ opacity:1; animation:none !important; transform:none; }
 body.welcome-ready.splash-done .welcome-text h1{ animation-delay:.15s !important; }
 body.welcome-ready.splash-done .welcome-text p{ animation-delay:.35s !important; }
 body.welcome-ready.splash-done .suggestions button:nth-child(1){ animation-delay:.55s !important; }
@@ -789,8 +789,8 @@ body.welcome-ready.splash-done .suggestions button:nth-child(3){ animation-delay
 body.welcome-ready.splash-done .suggestions button:nth-child(4){ animation-delay:1.0s !important; }
 
 @media (prefers-reduced-motion: reduce){
-    #foxSplash{ display:none !important; }
-    body:not(.welcome-ready) .fox-logo,
+    #mintifSplash{ display:none !important; }
+    body:not(.welcome-ready) .mintif-logo,
     body:not(.welcome-ready) .welcome-text h1,
     body:not(.welcome-ready) .welcome-text p,
     body:not(.welcome-ready) .suggestions button{ animation:none !important; }

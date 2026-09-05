@@ -66,7 +66,7 @@ def react_assets(filename):
 def chatbot():
   return render_template(
     "chatbot.html",
-    nama="RIO",
+    nama="User",
     riwayat_chat=ambil_history(get_user_id())
   )
 
@@ -81,7 +81,7 @@ def api_chat():
   user_id = get_user_id()
   history = ambil_history(user_id)
   reply = get_reply(message, history)
-  tambah_message(user_id, "Rio", message)
+  tambah_message(user_id, "User", message)
   tambah_message(user_id, "AI", reply)
 
   return jsonify({
@@ -103,7 +103,7 @@ def api_chat_stream():
     def emb_error():
       yield f"data: {json.dumps({'error': 'Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti.'}, ensure_ascii=False)}\n\n"
     return Response(stream_with_context(emb_error()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-  tambah_message(user_id, "Rio", message)
+  tambah_message(user_id, "User", message)
   def generate():
     full = ""
     try:

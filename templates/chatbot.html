@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#1C1F23">
 
-    <title>Fox AI</title>
+    <title>Mintif</title>
 
     <link rel="stylesheet" href="/static/css/chatbot.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,7 +47,7 @@
     overlay.classList.add('no-transition');
   })();
 </script>
-<div id="foxSplash" aria-hidden="true"><img src="/static/assets/fox-logo.png" alt=""></div>
+<div id="mintifSplash" aria-hidden="true"><img src="/static/assets/arthasa-logo.png" alt=""></div>
 <div class="chat-container">
 
     <!-- Header -->
@@ -57,11 +57,11 @@
         </button>
         <div class="header-info">
             <div class="header-logo">
-              <img src="/static/assets/fox-logo.png" alt="Fox AI Logo" width="42" height="42" loading="eager" decoding="async">
+              <img src="/static/assets/arthasa-logo.png" alt="Arthasa Logo" width="42" height="42" loading="eager" decoding="async">
             </div>
             <div class="header-text">
-                <h2>Fox AI</h2>
-                <p>AI Assistant</p>
+                <h2>Mintif</h2>
+                <p>Asisten AI HIMATIF</p>
             </div>
         </div>
 
@@ -80,18 +80,18 @@
     <!-- Chat Area -->
     <div class="chat-history" role="log" aria-live="polite" aria-label="Riwayat chat">
     <div class="welcome-screen">
-      <div class="fox-logo">
-        <img src="/static/assets/fox-logo.png" alt="Fox AI Logo" width="180" height="180" loading="eager" decoding="async">
+      <div class="mintif-logo">
+        <img src="/static/assets/arthasa-logo.png" alt="Arthasa Logo" width="180" height="180" loading="eager" decoding="async">
       </div>
       <div class="welcome-text">
-        <h1>Welcome to Fox AI</h1>
-        <p>Your AI Assistant</p>
+        <h1>Selamat datang di Mintif</h1>
+        <p>Teman AI-mu Soal HIMATIF</p>
       </div>
       <div class="suggestions">
-        <button type="button" class="suggestion-btn">Suggestion 1?</button>
-        <button type="button" class="suggestion-btn">Suggestion 2?</button>
-        <button type="button" class="suggestion-btn">Suggestion 3?</button>
-        <button type="button" class="suggestion-btn">Suggestion 4?</button>
+        <button type="button" class="suggestion-btn">Apa itu HIMATIF?</button>
+        <button type="button" class="suggestion-btn">Cara masuk HIMATIF?</button>
+        <button type="button" class="suggestion-btn">Apa itu ARTHASA?</button>
+        <button type="button" class="suggestion-btn">Mintif itu siapa?</button>
       </div>
     </div>
         <div id="messages">{% for pesan in riwayat_chat %}<div class="message {{ pesan['sender'] }}">{{ pesan["text"] }}</div>{% endfor %}</div>
@@ -104,11 +104,11 @@
                 id="chat-input"
                 type="text"
                 name="pesan"
-                placeholder="Tanya apapun pada Fox AI..."
+                placeholder="Tanya apapun pada Mintif..."
                 autocomplete="off"
                 enterkeyhint="send"
                 inputmode="text"
-                aria-label="Tulis pesan untuk Fox AI"
+                aria-label="Tulis pesan untuk Mintif"
             >
             <button type="submit" disabled aria-label="Kirim pesan">
                 ➜

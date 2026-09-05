@@ -14,7 +14,7 @@ function safeGet(key){ try{ return sessionStorage.getItem(key); }catch(e){ retur
 function safeSet(key,val){ try{ sessionStorage.setItem(key,val); }catch(e){} }
 function safeRemove(key){ try{ sessionStorage.removeItem(key); }catch(e){} }
 
-const splash = document.getElementById('foxSplash');
+const splash = document.getElementById('mintifSplash');
 const splashImg = splash ? splash.querySelector('img') : null;
 let splashTimers = [];
 let splashDone = false;
@@ -42,7 +42,7 @@ function clearSplashTimers(){
   splashTimers = [];
 }
 function flipToWelcome(doneCb){
-  const target = document.querySelector('.fox-logo img');
+  const target = document.querySelector('.mintif-logo img');
   if (!target || !splashImg) {
     if (doneCb) doneCb();
     return;
@@ -79,7 +79,7 @@ function flipToWelcome(doneCb){
   const fallback = setTimeout(finish, 500);
   splashTimers.push(fallback);
 }
-function playFoxSplash(){
+function playMintifSplash(){
   if (!splash || !splashImg || splashDone) return;
   splashDone = true;
   splash.style.display = 'grid';
@@ -132,7 +132,7 @@ function maxRadiusFrom(x, y){
       root.style.setProperty('--r', '0px');
       if (needsSplash) {
         // overlap 180ms biar circle udah kebuka 20% baru logo mulai, zoom 0.08→1 jadi keliatan
-        const t = setTimeout(playFoxSplash, 180);
+        const t = setTimeout(playMintifSplash, 180);
         splashTimers.push(t);
       }
     });
@@ -237,7 +237,7 @@ window.addEventListener('pageshow', (event) => {
       requestAnimationFrame(() => {
         root.style.setProperty('--r', '0px');
         if (needsSplash) {
-          const t = setTimeout(playFoxSplash, 180);
+          const t = setTimeout(playMintifSplash, 180);
           splashTimers.push(t);
         }
       });
@@ -348,7 +348,7 @@ function showRetryButton(pesan, aiBubble) {
 
 async function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
-  buatBubble("Rio", pesan);
+  buatBubble("User", pesan);
   input.value = "";
   setSending(true);
   lastFailedPesan = pesan;
