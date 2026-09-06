@@ -414,7 +414,7 @@ body{
   }
 }
 
-.Rio{
+.User{
     align-self:flex-end;
     background:linear-gradient(135deg, rgba(94,20,27,.95), rgba(94,20,27,.7));
     color:#FBFBFB;
@@ -558,14 +558,14 @@ body{
     transform:none;
 }
 
-.Rio + .Rio{
+.User + .User{
     margin-top:2px;
 }
 .AI + .AI{
     margin-top:2px;
 }
-.Rio + .AI,
-.AI + .Rio{
+.User + .AI,
+.AI + .User{
     margin-top:18px;
 }
 
