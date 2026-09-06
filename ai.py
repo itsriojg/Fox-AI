@@ -1,9 +1,24 @@
 import os
+import re
 import time
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
+
+TEMPERATURE = 0.7
+
+def sanitize_flat(text):
+  if not text:
+    return text
+  text = re.sub(r"\*+", "", text)
+  text = re.sub(r"#+", "", text)
+  text = re.sub(r"`+", "", text)
+  text = re.sub(r"(?m)^---+\s*$", "", text)
+  text = text.replace("—", "-").replace("–", "-")
+  text = re.sub(r"(?m)[ \t]+$", "", text)
+  text = re.sub(r"\n{3,}", "\n\n", text)
+  return text.strip()
 
 client = OpenAI(
     api_key=os.getenv("AI_API_KEY") or os.getenv("GROQ_API_KEY"),
@@ -29,12 +44,13 @@ def get_ai_reply(system_prompt, prompt):
        "content": prompt
       }
     ],
+    temperature=TEMPERATURE,
     timeout=TIMEOUT
   )
     end = time.time()
     print(f"Model : {MODEL}")
     print(f"Waktu request: {end - start:.2f} detik")
-    return response.choices[0].message.content
+    return sanitize_flat(response.choices[0].message.content)
 
   except Exception as e:
     print(e)
@@ -55,6 +71,7 @@ def get_ai_reply_stream(system_prompt, prompt):
        "content": prompt
       }
     ],
+    temperature=TEMPERATURE,
     timeout=TIMEOUT,
     stream=True
   )

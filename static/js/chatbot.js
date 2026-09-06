@@ -377,7 +377,7 @@ async function kirimPesan(pesan){
         for (let i = 0; i < burst && charQueue.length > 0; i++) {
           chunk += charQueue.shift();
         }
-        aiBubble.textContent += chunk;
+        aiBubble.textContent += chunk.replace(/\*/g, "");
         hasStreamed = true;
         scrollkebawah();
       } else if (doneReceived && streamFinished) {

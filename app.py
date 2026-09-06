@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, redirect, jsonify, session, R
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from chatbot import get_reply, build_rag_prompt
-from ai import get_ai_reply_stream
+from ai import get_ai_reply_stream, sanitize_flat
 from history import tambah_message, ambil_history, hapus_history
 from database import build_table_history, build_table_knowledge, knowledge_exists
 from rag import build_knowledge
@@ -78,7 +78,7 @@ def api_chat():
   history = ambil_history(user_id)
   reply = get_reply(message, history)
   tambah_message(user_id, "User", message)
-  tambah_message(user_id, "AI", reply)
+  tambah_message(user_id, "AI", sanitize_flat(reply))
 
   return jsonify({
     "reply": reply
@@ -106,12 +106,12 @@ def api_chat_stream():
       for token in get_ai_reply_stream(system_p, prompt):
         full += token
         yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
-      tambah_message(user_id, "AI", full)
+      tambah_message(user_id, "AI", sanitize_flat(full))
       yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
     except Exception as e:
       print(f"[STREAM ERROR] {e}")
       if full:
-        tambah_message(user_id, "AI", full)
+        tambah_message(user_id, "AI", sanitize_flat(full))
       yield f"data: {json.dumps({'error': 'Maaf, server sedang mengalami kendala. Silakan coba lagi.'}, ensure_ascii=False)}\n\n"
   return Response(stream_with_context(generate()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Content-Type": "text/event-stream"})
 
