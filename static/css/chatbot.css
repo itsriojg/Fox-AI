@@ -409,7 +409,7 @@ body{
 }
 
 @media (hover:hover){
-  .message:hover{
+  .User:hover{
     transform:translateY(-2px);
   }
 }
@@ -423,12 +423,56 @@ body{
 }
 
 .AI{
-    align-self:flex-start;
-    background:var(--ai-bubble);
+    align-self:stretch;
+    max-width:100%;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    border-radius:0;
     color:var(--text);
-    border:1px solid rgba(251,251,251,.15);
-    border-bottom-left-radius:8px;
-    box-shadow:0 8px 22px rgba(0,0,0,.25);
+    padding:4px 2px;
+}
+
+/* markdown dalam jawaban AI (plain background ala ChatGPT) */
+.AI p{
+    margin:0 0 10px;
+}
+.AI p:last-child{
+    margin-bottom:0;
+}
+.AI h3{
+    font-size:15px;
+    font-weight:700;
+    color:#FBFBFB;
+    margin:12px 0 6px;
+}
+.AI h3:first-child{
+    margin-top:0;
+}
+.AI ul, .AI ol{
+    margin:6px 0 10px;
+    padding-left:22px;
+}
+.AI ul:last-child, .AI ol:last-child{
+    margin-bottom:0;
+}
+.AI li{
+    margin:4px 0;
+}
+.AI li::marker{
+    color:#AF9D80;
+}
+.AI code{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:.88em;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(175,157,128,.25);
+    padding:1px 6px;
+    border-radius:6px;
+}
+.AI a{
+    color:#AF9D80;
+    text-decoration:underline;
 }
 
 .header-glow{
@@ -582,6 +626,9 @@ body{
      max-width: 85%;
      font-size: 14px;
   }
+  .AI{
+     max-width:100%;
+  }
 }
 @media (max-width: 480px){
   .chat-history{ padding:16px; }
@@ -616,6 +663,9 @@ body{
   }
   .message{
     max-width: clamp(520px, 62%, 640px);
+  }
+  .AI{
+    max-width:100%;
   }
 }
 

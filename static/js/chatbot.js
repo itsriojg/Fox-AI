@@ -346,6 +346,55 @@ function showRetryButton(pesan, aiBubble) {
   scrollkebawah();
 }
 
+// Mini markdown renderer (vanilla, tanpa dep): bold, italic, heading,
+// list, code inline, link http(s). Tabel/HR/code-block TIDAK dirender.
+// Selalu escape HTML dulu → tahan XSS. Cuma dipakai untuk bubble AI.
+function escapeHtml(s){
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function renderInline(s){
+  s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  return s;
+}
+function renderMarkdown(raw){
+  const lines = escapeHtml(raw).split("\n");
+  let html = "", inUL = false, inOL = false, para = [];
+  function closeLists(){
+    if (inUL){ html += "</ul>"; inUL = false; }
+    if (inOL){ html += "</ol>"; inOL = false; }
+  }
+  function flushPara(){
+    if (para.length){ html += "<p>" + para.join("<br>") + "</p>"; para = []; }
+  }
+  for (const line of lines){
+    let m;
+    if ((m = line.match(/^\s{0,3}#{1,3}\s+(.*)$/))){
+      closeLists(); flushPara();
+      html += "<h3>" + renderInline(m[1].trim()) + "</h3>";
+    } else if ((m = line.match(/^\s*[-*]\s+(.*)$/))){
+      flushPara();
+      if (!inUL){ closeLists(); html += "<ul>"; inUL = true; }
+      html += "<li>" + renderInline(m[1]) + "</li>";
+    } else if ((m = line.match(/^\s*\d+\.\s+(.*)$/))){
+      flushPara();
+      if (!inOL){ closeLists(); html += "<ol>"; inOL = true; }
+      html += "<li>" + renderInline(m[1]) + "</li>";
+    } else if (line.trim() === ""){
+      closeLists(); flushPara();
+    } else {
+      closeLists(); para.push(renderInline(line));
+    }
+  }
+  closeLists(); flushPara();
+  return html;
+}
+function renderAIBubble(el, raw){
+  el.innerHTML = renderMarkdown(raw);
+}
+
 async function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
   buatBubble("User", pesan);
@@ -354,6 +403,7 @@ async function kirimPesan(pesan){
   lastFailedPesan = pesan;
   const typing = tampilkanTyping();
   let aiBubble = null;
+  let aiRaw = "";
   let hasStreamed = false;
   let buffer = "";
   let charQueue = [];
@@ -377,7 +427,8 @@ async function kirimPesan(pesan){
         for (let i = 0; i < burst && charQueue.length > 0; i++) {
           chunk += charQueue.shift();
         }
-        aiBubble.textContent += chunk.replace(/\*/g, "");
+        aiRaw += chunk;
+        renderAIBubble(aiBubble, aiRaw);
         hasStreamed = true;
         scrollkebawah();
       } else if (doneReceived && streamFinished) {
@@ -587,7 +638,9 @@ clearForm.addEventListener("submit", (event) => {
 function buatBubble(sender, text){
   const bubble = document.createElement("div");
   bubble.className = "message " + sender;
-  bubble.textContent = text;
+  // cuma bubble AI yang di-render markdown; bubble user tetap teks polos
+  if (sender === "AI") renderAIBubble(bubble, text);
+  else bubble.textContent = text;
   messages.appendChild(bubble);
 
   updateClearButton();
@@ -598,10 +651,12 @@ if(messages.children.length > 0){
   welcomeScreen.style.display = "none";
 }
 // safety net: trim history yang terlanjur punya leading newline/spasi akibat template lama + pre-wrap
+// + render markdown untuk bubble AI dari server (Jinja autoescape kirim raw text)
 document.querySelectorAll("#messages .message").forEach(el => {
   const t = el.textContent;
   const trimmed = t.trim();
-  if (t !== trimmed) el.textContent = trimmed;
+  if (el.classList.contains("AI")) renderAIBubble(el, trimmed);
+  else if (t !== trimmed) el.textContent = trimmed;
 });
 updateClearButton();
 

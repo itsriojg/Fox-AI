@@ -8,14 +8,16 @@ load_dotenv()
 
 TEMPERATURE = 0.7
 
-def sanitize_flat(text):
+def sanitize_markdown(text):
   if not text:
     return text
-  text = re.sub(r"\*+", "", text)
-  text = re.sub(r"#+", "", text)
-  text = re.sub(r"`+", "", text)
-  text = re.sub(r"(?m)^---+\s*$", "", text)
   text = text.replace("—", "-").replace("–", "-")
+  text = re.sub(r"(?m)^[ \t]*```.*$", "", text)
+  text = re.sub(r"(?m)^[ \t]*---+[ \t]*$", "", text)
+  text = re.sub(r"(?m)^[ \t]*\|?[ \t:\-|]+\|[ \t]*$", "", text)
+  text = text.replace("\\[", "").replace("\\]", "")
+  while text.count("**") % 2 == 1:
+    text = "".join(text.rsplit("**", 1))
   text = re.sub(r"(?m)[ \t]+$", "", text)
   text = re.sub(r"\n{3,}", "\n\n", text)
   return text.strip()
@@ -50,7 +52,7 @@ def get_ai_reply(system_prompt, prompt):
     end = time.time()
     print(f"Model : {MODEL}")
     print(f"Waktu request: {end - start:.2f} detik")
-    return sanitize_flat(response.choices[0].message.content)
+    return sanitize_markdown(response.choices[0].message.content)
 
   except Exception as e:
     print(e)
