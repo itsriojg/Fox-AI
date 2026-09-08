@@ -769,13 +769,17 @@ body{
 
 .circle-overlay{
     position: fixed;
-    inset: 0;
+    width: 100px;
+    height: 100px;
+    left: calc(var(--ox, 50vw) - 50px);
+    top: calc(var(--oy, 50vh) - 50px);
+    border-radius: 50%;
     background: var(--bg-main);
     z-index: 9999;
     pointer-events: none;
-    clip-path: circle(var(--r, 0px) at var(--ox, 50%) var(--oy, 50%));
-    transition: clip-path .65s cubic-bezier(.65, 0, .35, 1);
-    will-change: clip-path;
+    transform: scale(var(--s, 0));
+    transition: transform .65s cubic-bezier(.65, 0, .35, 1);
+    will-change: transform;
 }
 .circle-overlay.no-transition{
     transition: none;

@@ -104,11 +104,34 @@ function playMintifSplash(){
 }
 
 // hanya reset ke 0 kalau bukan arrival dari home (toChat)
-// kalau toChat, --r sudah di-set max di inline script chatbot.html biar overlay ketutup sebelum paint
+// kalau toChat, --s sudah di-set skala tutup di inline script chatbot.html biar overlay ketutup sebelum paint
+// arrival lintas origin (?phase=toChat&ox=&oy=) dianggap toChat juga + koordinat
+// disimpan ke sessionStorage biar tombol back punya titik asal
+function bacaQueryToChat(){
+  try {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('phase') !== 'toChat') return null;
+    const qx = parseFloat(q.get('ox')), qy = parseFloat(q.get('oy'));
+    // Fallback ke tengah viewport kalau koordinat tidak valid/cacat —
+    // biar FAB selalu trigger cover->open walau URL kiriman kurang ox/oy.
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const x = Number.isNaN(qx) ? cx : qx;
+    const y = Number.isNaN(qy) ? cy : qy;
+    return { x, y };
+  } catch(e) { return null; }
+}
+const _queryArrival = bacaQueryToChat();
+if (_queryArrival) {
+  safeSet('mintifTransitionPhase', 'toChat');
+  safeSet('mintifOriginX', _queryArrival.x);
+  safeSet('mintifOriginY', _queryArrival.y);
+  // query sudah dikonsumsi, bersihkan dari URL biar refresh tidak replay animasi
+  try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
+}
 const _isToChatArrival = safeGet('mintifTransitionPhase') === 'toChat';
 if (!_isToChatArrival) {
-  root.style.setProperty('--r', '0px');
-  overlay.style.removeProperty('--r');
+  root.style.setProperty('--s', '0');
+  overlay.style.removeProperty('--s');
   revealWelcome();
 }
 
@@ -119,17 +142,42 @@ function maxRadiusFrom(x, y){
   return Math.hypot(dx, dy);
 }
 
+// Overlay lingkaran 100px yang di-scale GPU (compositor, tanpa repaint):
+// s = radius_tutup / 50. Jauh lebih mulus dari clip-path di HP kentang.
+function scaleFor(x, y){
+  return maxRadiusFrom(x, y) / 50;
+}
+
+// Samakan dengan sisi Vue: clamp titik origin ke dalam viewport tujuan.
+// Kalau koordinat cacat/NaN (buka /chatbot langsung, session ke-clear) → tengah
+// viewport, biar cover->open / expand tetap main, tidak loncat polos.
+function clampOrigin(x, y){
+  const vw = window.innerWidth || 1, vh = window.innerHeight || 1;
+  if (Number.isNaN(x) || Number.isNaN(y)) return { x: vw / 2, y: vh / 2 };
+  return { x: Math.min(Math.max(x, 0), vw), y: Math.min(Math.max(y, 0), vh) };
+}
+
 (function playEntranceIfNeeded(){
   if (!_isToChatArrival) return;
 
   const needsSplash = shouldShowSplash(true);
 
-  overlay.style.removeProperty('--r');
+  // Pola mekarDari (sisi Vue): snap ketutup -> reflow sync -> buka transisi
+  // -> double raf set --s:0. Double rAF biar browser sempat paint state awal
+  // sebelum transisi (single rAF rawan ke-batch → animasi ke-skip/snap).
+  const rc = clampOrigin(parseFloat(safeGet('mintifOriginX')), parseFloat(safeGet('mintifOriginY')));
+  const x = rc.x, y = rc.y;
+
+  overlay.classList.add('no-transition');
+  root.style.setProperty('--ox', x + 'px');
+  root.style.setProperty('--oy', y + 'px');
+  root.style.setProperty('--s', scaleFor(x, y));
+  overlay.getBoundingClientRect(); // reflow sync: snap ketutup pre-paint
+  overlay.classList.remove('no-transition');
+
   requestAnimationFrame(() => {
-    overlay.classList.remove('no-transition');
-    overlay.getBoundingClientRect();
     requestAnimationFrame(() => {
-      root.style.setProperty('--r', '0px');
+      root.style.setProperty('--s', '0');
       if (needsSplash) {
         // overlap 180ms biar circle udah kebuka 20% baru logo mulai, zoom 0.08→1 jadi keliatan
         const t = setTimeout(playMintifSplash, 180);
@@ -150,44 +198,51 @@ function maxRadiusFrom(x, y){
       revealWelcome();
     };
     function onEnd(e){
-      if (e.propertyName !== 'clip-path') return;
+      if (e.propertyName !== 'transform') return;
       doReveal();
     }
     overlay.addEventListener('transitionend', onEnd);
-    const fb = setTimeout(doReveal, 700);
-    splashTimers.push(fb);
   }
 })();
 
 function handleBackNavigation() {
+  // Tujuan pulang: home web HIMATIF (env HOME_URL, default "/" = home Flask standalone).
+  const homeBase = (typeof window.MINTIF_HOME_URL === 'string' && window.MINTIF_HOME_URL)
+    ? window.MINTIF_HOME_URL.replace(/\/+$/, '')
+    : '';
   const x = parseFloat(safeGet('mintifOriginX'));
   const y = parseFloat(safeGet('mintifOriginY'));
-
-  if (Number.isNaN(x) || Number.isNaN(y)) {
-    window.location.href = "/";
-    return;
-  }
 
   if (backButton.dataset.leaving) return;
 
   backButton.dataset.leaving = "true";
 
+  // Clamp + fallback tengah viewport (jangan href polos tanpa query):
+  // biar pulang selalu bawa ?phase=toHome&ox&oy valid dan reverse-nya main.
+  const c = clampOrigin(x, y);
+  const cx = c.x, cy = c.y;
+  safeSet('mintifOriginX', cx);
+  safeSet('mintifOriginY', cy);
+
   overlay.classList.add('no-transition');
-  root.style.setProperty('--ox', x + 'px');
-  root.style.setProperty('--oy', y + 'px');
+  root.style.setProperty('--ox', cx + 'px');
+  root.style.setProperty('--oy', cy + 'px');
+  root.style.setProperty('--s', '0'); // snap explicit dari 0 (sama kayak mekarDari Vue)
 
   overlay.getBoundingClientRect();
 
   overlay.classList.remove('no-transition');
 
   requestAnimationFrame(() => {
-    root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
+    requestAnimationFrame(() => {
+      root.style.setProperty('--s', scaleFor(cx, cy));
+    });
   });
 
   safeSet('mintifTransitionPhase', 'toHome');
 
   function onEnd(e) {
-    if (e.propertyName !== 'clip-path') return
+    if (e.propertyName !== 'transform') return
     goHome()
   }
 
@@ -208,8 +263,10 @@ function handleBackNavigation() {
     if (done) return;
     done = true;
     cleanup();
-    try{ history.replaceState(null, '', '/'); }catch(e){}
-    window.location.href = "/";
+    // pulang lintas origin: tempel titik origin di query biar home HIMATIF
+    // bisa snap ketutup pre-paint lalu susut (reverse circle reveal)
+    const sep = homeBase.indexOf('?') === -1 ? '?' : '&';
+    window.location.href = homeBase + "/" + sep + "phase=toHome&ox=" + Math.round(cx) + "&oy=" + Math.round(cy);
   };
 
   // Navigate pas 70% animasi (455ms dari 650ms)
@@ -218,6 +275,26 @@ function handleBackNavigation() {
 }
 
 backButton.addEventListener("click", handleBackNavigation);
+
+// Back HP ≡ back web: pushState pas load, popstate -> handleBackNavigation().
+// Biar tombol back fisik HP/konsumen ngereduksi ke home (circle reverse) juga.
+// Guard lama (cuma fire kalau phase toHome/backNav) salah: saat normal phase=null
+// sehingga trap tidak pernah fire dan back HP jadi native back ke halaman Vue
+// frozen mid-cover (layar hitam). Sekarang intercept tiap back (kecuali lagi
+// leaving) + pushState ulang biar back berikutnya tetap tertahan.
+// Entry dikasih hash #mintif-chat (bukan pathname polos) biar system back HP
+// reliably mendarat di entry same-document; tidak ada kode yang baca hash
+// (aman), dan arrival replaceState membersihkannya.
+(function(){
+  var trapUrl = null;
+  try { trapUrl = window.location.pathname + '#mintif-chat'; } catch(e) {}
+  try { history.pushState(null, '', trapUrl || window.location.pathname); } catch(e) {}
+  window.addEventListener('popstate', () => {
+    if (backButton.dataset.leaving) return;
+    try { history.pushState(null, '', trapUrl || window.location.pathname); } catch(e) {}
+    handleBackNavigation();
+  });
+})();
 
 // Handle mobile back button via pagehide (lebih aman dari beforeunload untuk BFCache)
 window.addEventListener('pagehide', () => {
@@ -230,12 +307,12 @@ window.addEventListener('pagehide', () => {
 window.addEventListener('pageshow', (event) => {
   if (event.persisted && safeGet('mintifTransitionPhase') === 'toChat') {
     const needsSplash = shouldShowSplash(true);
-    overlay.style.removeProperty('--r');
+    overlay.style.removeProperty('--s');
     requestAnimationFrame(() => {
       overlay.classList.remove('no-transition');
       overlay.getBoundingClientRect();
       requestAnimationFrame(() => {
-        root.style.setProperty('--r', '0px');
+        root.style.setProperty('--s', '0');
         if (needsSplash) {
           const t = setTimeout(playMintifSplash, 180);
           splashTimers.push(t);
@@ -252,7 +329,7 @@ window.addEventListener('pageshow', (event) => {
         revealWelcome();
       };
       function onEnd(e){
-        if (e.propertyName !== 'clip-path') return;
+        if (e.propertyName !== 'transform') return;
         doReveal();
       }
       overlay.addEventListener('transitionend', onEnd);
@@ -262,8 +339,16 @@ window.addEventListener('pageshow', (event) => {
   } else if (event.persisted && !safeGet('mintifTransitionPhase')) {
     // BFCache restore normal — jangan paksa redirect ke '/', cukup reveal welcome
     // biar ga blackscreen (fix: sebelumnya window.location.href='/' bikin loop)
-    root.style.setProperty('--r', '0px');
-    overlay.style.removeProperty('--r');
+    root.style.setProperty('--s', '0');
+    overlay.style.removeProperty('--s');
+    overlay.classList.remove('no-transition');
+    revealWelcome();
+  } else if (event.persisted && safeGet('mintifTransitionPhase') === 'toHome') {
+    // Restore BFCache pas lagi ke-cover ke home — stale cover, reset biar ga hitam.
+    safeRemove('mintifTransitionPhase');
+    safeRemove('mintifBackNavigation');
+    root.style.setProperty('--s', '0');
+    overlay.style.removeProperty('--s');
     overlay.classList.remove('no-transition');
     revealWelcome();
   }

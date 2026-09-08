@@ -13,6 +13,12 @@
     return Math.hypot(dx, dy);
   }
 
+  // Overlay lingkaran 100px yang di-scale GPU (sama kayak chatbot.js):
+  // s = radius_tutup / 50.
+  function scaleFor(x, y){
+    return maxRadiusFrom(x, y) / 50;
+  }
+
   function setOverlayOrigin(x, y){
     root.style.setProperty('--ox', x + 'px');
     root.style.setProperty('--oy', y + 'px');
@@ -33,13 +39,13 @@
       root.style.setProperty('--ox', x + 'px');
       root.style.setProperty('--oy', y + 'px');
 
-      // overlay statik + inline script udah cover layar di r = max
+      // overlay statik + inline script udah cover layar di s = tutup
       // tinggal animate shrink buka home
       requestAnimationFrame(function(){
         overlay.classList.remove('no-transition');
 
         requestAnimationFrame(function(){
-          root.style.setProperty('--r', '0px');
+          root.style.setProperty('--s', '0');
         });
       });
 
@@ -74,19 +80,23 @@
 
     fab.dataset.leaving = 'true';
 
-    // snap origin + radius 0 secara instan (tanpa transisi) dulu
+    // snap origin + skala 0 secara instan (tanpa transisi) dulu
     overlay.classList.add('no-transition');
 
     setOverlayOrigin(x, y);
 
-    root.style.setProperty('--r', '0px');
+    root.style.setProperty('--s', '0');
 
     overlay.getBoundingClientRect();
 
     overlay.classList.remove('no-transition');
 
+    // Double rAF (sama kayak playReturnAnimation di atas): biar browser sempat
+    // paint state snap sebelum transisi, single rAF rawan ke-batch → ke-skip.
     requestAnimationFrame(function(){
-      root.style.setProperty('--r', maxRadiusFrom(x, y) + 'px');
+      requestAnimationFrame(function(){
+        root.style.setProperty('--s', scaleFor(x, y));
+      });
     });
 
     safeSet('mintifOriginX', x);
@@ -114,7 +124,7 @@
     };
 
     function handleTransitionEnd(e){
-      if (e.propertyName !== 'clip-path') return;
+      if (e.propertyName !== 'transform') return;
       goToChat();
     }
 

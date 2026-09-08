@@ -30,20 +30,38 @@
 <script>
   (function(){
     // parity sama chatbot.html: cover layar sinkron sebelum first paint
-    // pas balik dari chatbot (phase 'toHome'), biar reverse-nya mulus tanpa jeda
+    // pas balik dari chatbot (phase 'toHome'), biar reverse-nya mulus tanpa jeda.
+    // Query dicek DULU (sessionStorage tidak nyebrang origin) + fallback query
+    // yang dulu tidak ada.
     var overlay = document.getElementById('circleOverlay');
-    var phase = null;
-    try { phase = sessionStorage.getItem('mintifTransitionPhase'); } catch(e) {}
-    if (phase !== 'toHome') return;
-    var x = null, y = null;
-    try { x = parseFloat(sessionStorage.getItem('mintifOriginX')); y = parseFloat(sessionStorage.getItem('mintifOriginY')); } catch(e) {}
+    var x = null, y = null, arrival = false;
+    try {
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('phase') === 'toHome') {
+        var qx = parseFloat(q.get('ox')), qy = parseFloat(q.get('oy'));
+        var vw0 = window.innerWidth || 1, vh0 = window.innerHeight || 1;
+        x = isNaN(qx) ? vw0 / 2 : Math.min(Math.max(qx, 0), vw0);
+        y = isNaN(qy) ? vh0 / 2 : Math.min(Math.max(qy, 0), vh0);
+        arrival = true;
+      }
+    } catch(e) {}
+    if (!arrival) {
+      var phase = null;
+      try { phase = sessionStorage.getItem('mintifTransitionPhase'); } catch(e) {}
+      if (phase !== 'toHome') return;
+      try { x = parseFloat(sessionStorage.getItem('mintifOriginX')); y = parseFloat(sessionStorage.getItem('mintifOriginY')); } catch(e) {}
+      var vw1 = window.innerWidth || 1, vh1 = window.innerHeight || 1;
+      if (isNaN(x) || isNaN(y)) { x = vw1 / 2; y = vh1 / 2; }
+      x = Math.min(Math.max(x, 0), vw1);
+      y = Math.min(Math.max(y, 0), vh1);
+    }
     if (isNaN(x) || isNaN(y)) return;
     var vw = window.innerWidth, vh = window.innerHeight;
-    var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+    var s = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) / 50;
     var root = document.documentElement;
     root.style.setProperty('--ox', x + 'px');
     root.style.setProperty('--oy', y + 'px');
-    root.style.setProperty('--r', r + 'px');
+    root.style.setProperty('--s', s);
     overlay.classList.add('no-transition');
   })();
 </script>

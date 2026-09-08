@@ -29,21 +29,48 @@
 <body>
 <div class="circle-overlay" id="circleOverlay"></div>
 <script>
+  // URL home web HIMATIF (tujuan tombol back). Diisi server dari env HOME_URL.
+  window.MINTIF_HOME_URL = {{ home_url|tojson }};
+</script>
+<script>
   (function(){
-    var phase = null;
-    try { phase = sessionStorage.getItem('mintifTransitionPhase'); } catch(e) {}
-    if (phase !== 'toChat') return;
-    var x = null, y = null;
-    try { x = parseFloat(sessionStorage.getItem('mintifOriginX')); y = parseFloat(sessionStorage.getItem('mintifOriginY')); } catch(e) {}
+    // Arrival = query ?phase=toChat (dicek DULU) ATAU sessionStorage toChat.
+    // sessionStorage tidak nyebrang origin, gate lama (session dulu) bikin
+    // first paint bocor: background chatbot ngintip sekilas sebelum entrance
+    // snap ketutup lagi. Sekarang cover pre-paint selalu jalan.
+    var x = null, y = null, arrival = false;
+    try {
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('phase') === 'toChat') {
+        var qx = parseFloat(q.get('ox')), qy = parseFloat(q.get('oy'));
+        var vw0 = window.innerWidth || 1, vh0 = window.innerHeight || 1;
+        x = isNaN(qx) ? vw0 / 2 : Math.min(Math.max(qx, 0), vw0);
+        y = isNaN(qy) ? vh0 / 2 : Math.min(Math.max(qy, 0), vh0);
+        arrival = true;
+      }
+    } catch(e) {}
+    if (!arrival) {
+      var phase = null;
+      try { phase = sessionStorage.getItem('mintifTransitionPhase'); } catch(e) {}
+      if (phase !== 'toChat') return;
+      try { x = parseFloat(sessionStorage.getItem('mintifOriginX')); y = parseFloat(sessionStorage.getItem('mintifOriginY')); } catch(e) {}
+      // Fallback ke tengah viewport kalau koordinat cacat/tidak ada —
+      // biar cover->open selalu main walau URL kiriman kurang ox/oy.
+      var vw1 = window.innerWidth || 1, vh1 = window.innerHeight || 1;
+      if (isNaN(x) || isNaN(y)) { x = vw1 / 2; y = vh1 / 2; }
+      x = Math.min(Math.max(x, 0), vw1);
+      y = Math.min(Math.max(y, 0), vh1);
+    }
     if (isNaN(x) || isNaN(y)) return;
     var vw = window.innerWidth, vh = window.innerHeight;
-    var r = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+    // Overlay lingkaran 100px di-scale GPU: s = radius_tutup / 50.
+    var s = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) / 50;
     var root = document.documentElement;
     var overlay = document.getElementById('circleOverlay');
-    overlay.style.removeProperty('--r');
+    overlay.style.removeProperty('--s');
     root.style.setProperty('--ox', x + 'px');
     root.style.setProperty('--oy', y + 'px');
-    root.style.setProperty('--r', r + 'px');
+    root.style.setProperty('--s', s);
     overlay.classList.add('no-transition');
   })();
 </script>
