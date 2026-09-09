@@ -205,22 +205,45 @@ function clampOrigin(x, y){
   }
 })();
 
-function handleBackNavigation() {
+function handleBackNavigation(dariTombolWeb) {
   // Tujuan pulang: home web HIMATIF (env HOME_URL, default "/" = home Flask standalone).
   const homeBase = (typeof window.MINTIF_HOME_URL === 'string' && window.MINTIF_HOME_URL)
     ? window.MINTIF_HOME_URL.replace(/\/+$/, '')
     : '';
-  const x = parseFloat(safeGet('mintifOriginX'));
-  const y = parseFloat(safeGet('mintifOriginY'));
 
   if (backButton.dataset.leaving) return;
 
   backButton.dataset.leaving = "true";
 
-  // Clamp + fallback tengah viewport (jangan href polos tanpa query):
-  // biar pulang selalu bawa ?phase=toHome&ox&oy valid dan reverse-nya main.
-  const c = clampOrigin(x, y);
-  const cx = c.x, cy = c.y;
+  let cx, cy;
+  if (dariTombolWeb) {
+    // Klik tombol back web: mekar dari titik tengah tombol yang dipencet
+    // (mirror titikTombol() FAB di MintifFab.vue). Fallback berlapis kalau
+    // rect gagal kebaca: origin session warisan arrival -> tengah viewport.
+    let bx = NaN, by = NaN;
+    try {
+      const r = backButton.getBoundingClientRect();
+      if (r) { bx = r.left + r.width / 2; by = r.top + r.height / 2; }
+    } catch(e) {}
+    if (Number.isNaN(bx) || Number.isNaN(by)) {
+      bx = parseFloat(safeGet('mintifOriginX'));
+      by = parseFloat(safeGet('mintifOriginY'));
+    }
+    // Clamp + fallback tengah viewport (jangan href polos tanpa query):
+    // biar pulang selalu bawa ?phase=toHome&ox&oy valid dan reverse-nya main.
+    const c = clampOrigin(bx, by);
+    cx = c.x; cy = c.y;
+  } else {
+    // Back HP (popstate): pertahankan perilaku lama — origin dari session
+    // warisan arrival, jangan diubah.
+    const x = parseFloat(safeGet('mintifOriginX'));
+    const y = parseFloat(safeGet('mintifOriginY'));
+
+    // Clamp + fallback tengah viewport (jangan href polos tanpa query):
+    // biar pulang selalu bawa ?phase=toHome&ox&oy valid dan reverse-nya main.
+    const c = clampOrigin(x, y);
+    cx = c.x; cy = c.y;
+  }
   safeSet('mintifOriginX', cx);
   safeSet('mintifOriginY', cy);
 
@@ -274,7 +297,7 @@ function handleBackNavigation() {
   fallbackTimer = setTimeout(goHome, 455);
 }
 
-backButton.addEventListener("click", handleBackNavigation);
+backButton.addEventListener("click", () => handleBackNavigation(true));
 
 // Back HP ≡ back web: pushState pas load, popstate -> handleBackNavigation().
 // Biar tombol back fisik HP/konsumen ngereduksi ke home (circle reverse) juga.
