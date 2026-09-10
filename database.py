@@ -4,25 +4,69 @@ from contextlib import closing
 DB_FILE = "database.db"
 TIMEOUT = 10
 
+def _ensure_wal(conn):
+  # Biar sqlite3 manual bisa intip pas stan jalan tanpa ke-block write.
+  try:
+    conn.execute("PRAGMA journal_mode=WAL")
+  except Exception:
+    pass
+
 def build_table_history():
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    _ensure_wal(conn)
     conn.execute(
       """CREATE TABLE IF NOT EXISTS history(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT,
       sender TEXT,
-      text TEXT
+      text TEXT,
+      created_at TEXT
       )"""
     )
     columns = [row[1] for row in conn.execute("PRAGMA table_info(history)").fetchall()]
     if "user_id" not in columns:
       conn.execute("ALTER TABLE history ADD COLUMN user_id TEXT")
+    if "created_at" not in columns:
+      # Baris lama (dev) biarin NULL biar ga ngotorin statistik PKKMB.
+      # (ALTER ga boleh bawa default fungsi, insert baru isi eksplisit.)
+      conn.execute("ALTER TABLE history ADD COLUMN created_at TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_history_user_created ON history(user_id, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_history_created ON history(created_at)")
+
+def build_table_audit():
+  # Append-only: TIDAK ikut /clear. 1 baris per 1 pertanyaan user.
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    _ensure_wal(conn)
+    conn.execute(
+      """CREATE TABLE IF NOT EXISTS chat_audit(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      user_id TEXT,
+      ip TEXT,
+      endpoint TEXT,
+      user_text TEXT,
+      hit_knowledge INTEGER,
+      latency_ms INTEGER,
+      error TEXT
+      )"""
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_created ON chat_audit(created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_user ON chat_audit(user_id, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_hit ON chat_audit(hit_knowledge, created_at)")
+
+def insert_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error=None):
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
+    conn.execute(
+      """INSERT INTO chat_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error, created_at)
+      VALUES(?,?,?,?,?,?,?,datetime('now','localtime'))""",
+      (user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error)
+    )
 
 def insert_history(user_id, sender, text):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
     conn.execute(
-      """INSERT INTO history(user_id, sender, text)
-      VALUES(?,?,?)""", (user_id, sender, text)
+      """INSERT INTO history(user_id, sender, text, created_at)
+      VALUES(?,?,?,datetime('now','localtime'))""", (user_id, sender, text)
     )
 
 def get_history(user_id):

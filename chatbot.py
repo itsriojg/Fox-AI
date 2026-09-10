@@ -17,7 +17,7 @@ def build_rag_prompt(message, history):
   try:
     query_embedding = get_embedding(message)
   except RuntimeError:
-    return None, None, "embedding_error"
+    return None, None, "embedding_error", 0
   context = []
   scores, indexes = cari_embedding(index, query_embedding, top_k=5)
   if len(scores) > 0 and len(indexes) > 0:
@@ -29,6 +29,7 @@ def build_rag_prompt(message, history):
         if chunk is not None:
           context.append(chunk)
 
+  hit_knowledge = 1 if context else 0
   knowledge = "\n\n".join(context) if context else "Tidak ada data relevan yang ditemukan."
   
   history_text = ""
@@ -46,11 +47,11 @@ Berikut adalah riwayat obrolan:
 Ini adalah pertanyaan user:
 {message}
 """
-  return system_prompt, prompt, None
+  return system_prompt, prompt, None, hit_knowledge
 
 def get_reply(message, history):
-  system_p, prompt, err = build_rag_prompt(message, history)
+  system_p, prompt, err, hit = build_rag_prompt(message, history)
   if err == "embedding_error":
-    return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti."
+    return "Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti.", 0, err
   reply = get_ai_reply(system_p, prompt)
-  return reply
+  return reply, hit, None
