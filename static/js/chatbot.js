@@ -730,17 +730,38 @@ function updateClearButton(){
   clearButton.disabled = messages.children.length === 0;
 }
 
+const CLEAR_SVG = clearButton.innerHTML;
+let confirmTimer = null;
+function batalConfirm(){
+  clearButton.classList.remove("confirm");
+  clearButton.innerHTML = CLEAR_SVG;
+  clearButton.setAttribute("aria-label", "Hapus riwayat chat");
+  if (confirmTimer){ clearTimeout(confirmTimer); confirmTimer = null; }
+}
+
 clearForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (clearButton.disabled) return;
+  // step 1: tap sekali -> mode konfirmasi (auto-batal 3 detik)
+  if (!clearButton.classList.contains("confirm")) {
+    clearButton.classList.add("confirm");
+    clearButton.textContent = "Yakin?";
+    clearButton.setAttribute("aria-label", "Ketuk lagi untuk hapus riwayat chat di layar ini");
+    confirmTimer = setTimeout(batalConfirm, 3000);
+    return;
+  }
+  // step 2: tap lagi -> eksekusi
+  if (confirmTimer){ clearTimeout(confirmTimer); confirmTimer = null; }
   fetch("/clear", { method: "POST" })
     .then(() => {
       messages.innerHTML = "";
       welcomeScreen.style.display = "";
       input.value = "";
       setSending(false);
+      batalConfirm();
       updateClearButton();
     })
-    .catch((error) => console.error(error));
+    .catch((error) => { console.error(error); batalConfirm(); });
 });
 
 function buatBubble(sender, text){
