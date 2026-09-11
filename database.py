@@ -47,19 +47,25 @@ def build_table_audit():
       user_text TEXT,
       hit_knowledge INTEGER,
       latency_ms INTEGER,
-      error TEXT
+      error TEXT,
+      miss_reason TEXT
       )"""
     )
     conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_created ON chat_audit(created_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_user ON chat_audit(user_id, created_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_hit ON chat_audit(hit_knowledge, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_miss ON chat_audit(miss_reason, created_at)")
+    # Migrasi DB lama (sebelum kolom miss_reason ada).
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(chat_audit)").fetchall()]
+    if "miss_reason" not in cols:
+      conn.execute("ALTER TABLE chat_audit ADD COLUMN miss_reason TEXT")
 
-def insert_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error=None):
+def insert_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error=None, miss_reason=None):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
     conn.execute(
-      """INSERT INTO chat_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error, created_at)
-      VALUES(?,?,?,?,?,?,?,datetime('now','localtime'))""",
-      (user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error)
+      """INSERT INTO chat_audit(user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error, miss_reason, created_at)
+      VALUES(?,?,?,?,?,?,?,?,datetime('now','localtime'))""",
+      (user_id, ip, endpoint, user_text, hit_knowledge, latency_ms, error, miss_reason)
     )
 
 def insert_history(user_id, sender, text):

@@ -31,6 +31,8 @@ MODEL = os.getenv("AI_MODEL") or ("GPT-120B-Fallback" if os.getenv("AI_BASE_URL"
 TIMEOUT = 30
 
 def get_ai_reply(system_prompt, prompt):
+  """Return (reply, err). err=None sukses, 'llm_error' kalau upstream gagal.
+  Dipakai POST /api/chat biar audit bisa bedain jawaban asli vs fallback."""
   try:
     start = time.time()
 
@@ -52,11 +54,11 @@ def get_ai_reply(system_prompt, prompt):
     end = time.time()
     print(f"Model : {MODEL}")
     print(f"Waktu request: {end - start:.2f} detik")
-    return sanitize_markdown(response.choices[0].message.content)
+    return sanitize_markdown(response.choices[0].message.content), None
 
   except Exception as e:
     print(e)
-    return "Maaf, server sedang mengalami kendala. Silakan coba lagi."
+    return "Maaf, server sedang mengalami kendala. Silakan coba lagi.", "llm_error"
 
 def get_ai_reply_stream(system_prompt, prompt):
   start = time.time()

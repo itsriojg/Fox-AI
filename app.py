@@ -96,12 +96,27 @@ def get_client_ip():
     return xff.split(",")[0].strip()
   return request.remote_addr or ""
 
-def catat_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error=None):
+def catat_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error=None, miss_reason=None):
   # Audit gagal JANGAN bikin chat gagal. Best-effort aja.
   try:
-    insert_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error)
+    insert_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error, miss_reason)
   except Exception as e:
     print(f"[AUDIT ERROR] {e}")
+
+# Tag akhir jawaban Mimin (konvensi prompt.py 2b): [OK]/[OOT]/[GATAU]/[CHIT].
+# [OK] = materi terjawab (bukan miss). Sisanya = miss gabungan.
+# Tag DICOPOT sebelum ke user/storage biar chat tetap bersih profesional.
+_TAG_RE = re.compile(r"\[(OK|OOT|GATAU|CHIT)\]\s*$")
+_TAG_MISS = {"OOT": "oot", "GATAU": "gatau", "CHIT": "chit"}
+
+def petik_tag(reply):
+  if not reply:
+    return reply, None
+  m = _TAG_RE.search(reply.strip())
+  if not m:
+    return reply, None
+  bersih = _TAG_RE.sub("", reply.strip()).strip()
+  return bersih, _TAG_MISS.get(m.group(1))
 
 @app.route("/health")
 def health():
@@ -141,9 +156,10 @@ def api_chat():
   start = time.time()
   reply, hit, err = get_reply(message, history)
   latency_ms = int((time.time() - start) * 1000)
+  reply, miss_reason = petik_tag(reply)
   tambah_message(user_id, "User", message)
   tambah_message(user_id, "AI", sanitize_markdown(reply))
-  catat_audit(user_id, ip, "chat", message, hit, latency_ms, err)
+  catat_audit(user_id, ip, "chat", message, hit, latency_ms, err, miss_reason)
 
   return jsonify({
     "reply": reply
@@ -179,14 +195,16 @@ def api_chat_stream():
       for token in get_ai_reply_stream(system_p, prompt):
         full += token
         yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+      full, miss_reason = petik_tag(full)
       tambah_message(user_id, "AI", sanitize_markdown(full))
-      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), None)
+      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), None, miss_reason)
       yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
     except Exception as e:
       print(f"[STREAM ERROR] {e}")
+      full, miss_reason = petik_tag(full)
       if full:
         tambah_message(user_id, "AI", sanitize_markdown(full))
-      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "stream_error")
+      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "stream_error", miss_reason)
       yield f"data: {json.dumps({'error': 'Maaf, server sedang mengalami kendala. Silakan coba lagi.'}, ensure_ascii=False)}\n\n"
   return Response(stream_with_context(generate()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Content-Type": "text/event-stream"})
 

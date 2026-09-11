@@ -14,6 +14,22 @@ function safeGet(key){ try{ return sessionStorage.getItem(key); }catch(e){ retur
 function safeSet(key,val){ try{ sessionStorage.setItem(key,val); }catch(e){} }
 function safeRemove(key){ try{ sessionStorage.removeItem(key); }catch(e){} }
 
+// UID stabil per browser (localStorage) — dikirim tiap request biar audit
+// ngitung 1 browser = 1 ID, bukan 1 session cookie = 1 ID.
+// Regex disamain kayak backend (_UID_WEB_RE di app.py).
+function getMintifUid(){
+  try {
+    let uid = localStorage.getItem("mintif_uid");
+    if (typeof uid === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(uid)) return uid;
+    const fresh = (crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx".replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+    })).replace(/-/g, "").slice(0, 32);
+    localStorage.setItem("mintif_uid", fresh);
+    return fresh;
+  } catch(e) { return ""; }
+}
+
 const splash = document.getElementById('mintifSplash');
 const splashImg = splash ? splash.querySelector('img') : null;
 let splashTimers = [];
@@ -500,7 +516,10 @@ function renderMarkdown(raw){
   return html;
 }
 function renderAIBubble(el, raw){
-  el.innerHTML = renderMarkdown(raw);
+  // Tag audit ([OK]/[OOT]/[GATAU]/[CHIT]) kadang kebawa token stream —
+  // copot sebelum render biar user ga liat. Backend juga nyopot buat simpanan.
+  const bersih = String(raw).replace(/\[(OK|OOT|GATAU|CHIT)\]\s*$/, "").replace(/\s*\[$/, "");
+  el.innerHTML = renderMarkdown(bersih);
 }
 
 async function kirimPesan(pesan){
@@ -558,7 +577,7 @@ async function kirimPesan(pesan){
   try {
     const response = await fetch("/api/chat/stream", {
       method: "POST",
-      body: new URLSearchParams({pesan: pesan})
+      body: new URLSearchParams({pesan: pesan, user_id: getMintifUid()})
     });
     if (!response.ok) {
       throw new Error("Stream HTTP " + response.status);
@@ -680,7 +699,7 @@ async function kirimPesan(pesan){
       try {
         const fallbackResp = await fetch("/api/chat", {
           method: "POST",
-          body: new URLSearchParams({pesan: pesan})
+          body: new URLSearchParams({pesan: pesan, user_id: getMintifUid()})
         });
         const fallbackData = await fallbackResp.json();
         if (!fallbackResp.ok) {
@@ -752,7 +771,7 @@ clearForm.addEventListener("submit", (event) => {
   }
   // step 2: tap lagi -> eksekusi
   if (confirmTimer){ clearTimeout(confirmTimer); confirmTimer = null; }
-  fetch("/clear", { method: "POST" })
+  fetch("/clear", { method: "POST", body: new URLSearchParams({user_id: getMintifUid()}) })
     .then(() => {
       messages.innerHTML = "";
       welcomeScreen.style.display = "";
