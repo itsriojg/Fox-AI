@@ -1,7 +1,7 @@
 # Mintif
 
 <p align="center">
-  <img src="static/assets/arthasa-logo.png" alt="Arthasa Logo" width="120">
+  <img src="static/assets/mintif-logo.webp" alt="Mintif Logo" width="120">
 </p>
 
 **Chatbot asisten HIMATIF dengan RAG · RAG-powered HIMATIF assistant chatbot**

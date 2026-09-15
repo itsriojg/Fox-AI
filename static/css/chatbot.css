@@ -294,8 +294,8 @@ body{
 .mintif-logo{
     filter:none;
     opacity:0;
-    margin-bottom:-12px;
-    animation: logoIntro 0.8s cubic-bezier(.22, 1, .36, 1) forwards;
+    margin-bottom:48px;
+    animation: logoFade .8s ease forwards;
     animation-delay: 0.2s;
 }
 
@@ -303,48 +303,68 @@ body{
     width: clamp(120px, 38vw, 180px);
     height: clamp(120px, 38vw, 180px);
     object-fit: contain;
-    filter:
-        drop-shadow(0 0 16px rgba(175,157,128,.35))
-        drop-shadow(0 0 36px rgba(94,20,27,.2));
     /* BUG FIX #2: kill long-press "copy/save image" context menu */
     pointer-events:none;
     -webkit-user-drag:none;
     -webkit-touch-callout:none;
 }
 
-@keyframes logoIntro{
-    from{
-        opacity:0;
-        transform:scale(.5);
-    }
-    to{
-        opacity:1;
-        transform:scale(1);
-    }
+@keyframes logoFade{
+    from{ opacity:0; }
+    to{ opacity:1; }
 }
 
+/* Lockup MINTIF / AI ASSISTANT HIMATIF — Space Grotesk, ikut spek branding.
+   h1 = judul (1em dari .welcome-text), p = tagline 25% dari judul.
+   letter-spacing em = tracking proporsional di semua breakpoint. */
 .welcome-text{
     display:flex;
     flex-direction:column;
-    gap:6px;
+    align-items:center;
+    gap:14px;
     margin-bottom:32px;
+    font-size:clamp(28px, 8vw, 40px);
 }
 
 .welcome-screen h1{
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--text);
+    font-family:"Space Grotesk", "Poppins", sans-serif;
+    font-size:1em;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.24em;
+    padding-left:.24em; /* tracking nambah spasi kanan di huruf terakhir — kompensasi biar optical-center */
+    line-height:1.1;
+    white-space:nowrap;
     opacity:0;
-    animation: staggerIn .85s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation: welcomeFade .85s ease forwards;
     animation-delay: 0.45s;
+}
+.welcome-screen h1 .min{ color:#FFFFFF; }
+.welcome-screen h1 .tif{
+    background:linear-gradient(90deg, #14D8FF 0%, #4E7BFF 50%, #8A3DFF 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    -webkit-text-fill-color:transparent;
 }
 
 .welcome-screen p{
-    color: var(--text-secondary);
-    font-size: 16px;
+    font-family:"Space Grotesk", "Poppins", sans-serif;
+    font-size:max(.25em, 10px);
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:.45em;
+    padding-left:.45em; /* kompensasi optical-center, sama kayak judul */
+    color:rgba(255,255,255,.8);
+    white-space:nowrap;
     opacity:0;
-    animation: staggerIn .85s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation: welcomeFade .85s ease forwards;
     animation-delay: 0.7s;
+}
+
+@keyframes welcomeFade{
+    from{ opacity:0; }
+    to{ opacity:1; }
 }
 
 @keyframes staggerIn{
@@ -647,8 +667,7 @@ body{
 }
 @media (max-width: 480px){
   .chat-history{ padding:16px; }
-  .welcome-screen h1{ font-size:26px; }
-  .welcome-screen p{ font-size:14px; }
+  /* lockup MINTIF ikut clamp .welcome-text (28px floor) — jangan override fixed, rasio tagline 25% dijaga */
   .suggestions button{ max-width:100%; padding:12px 14px; }
   .chat-input{ padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px)); }
   .chat-input form{ padding:6px 6px 6px 16px; border-color:rgba(175,157,128,.30); box-shadow:0 0 0 1px rgba(175,157,128,.10), 0 0 14px rgba(175,157,128,.32), 0 8px 24px rgba(0,0,0,.45); }
@@ -830,9 +849,7 @@ body{
     width: min(90vmin, 560px);
     height: min(90vmin, 560px);
     object-fit: contain;
-    filter:
-        drop-shadow(0 0 16px rgba(175,157,128,.35))
-        drop-shadow(0 0 36px rgba(94,20,27,.2));
+    /* spek branding: tanpa shadow */
     will-change: transform, opacity;
     pointer-events: none;
     -webkit-user-drag: none;
