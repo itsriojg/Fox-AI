@@ -2,14 +2,17 @@ from ai import get_ai_reply
 from prompt import system_prompt
 from embedding import get_embedding
 from vector_db import load_index, cari_embedding, rebuild_faiss
-from database import get_chunk_by_id
+from database import get_chunks_by_ids
 import os
 
-SIMILARITY_THRESHOLD = 0.55
+SIMILARITY_THRESHOLD = 0.60
 # Diukur 2026-09-11 (23 query, Jina 1024-d): valid-HIMATIF top1 0.618-0.717,
 # OOT murni (presiden/resep/sudo) <= 0.514. Threshold 0.55 = semua valid lolos,
 # OOT murni ke-filter. Gibberish pendek + chit-chat ("p", "kadal", ...) skornya
 # 0.55-0.63 (nemu kata himatif) -> DITANGKAP via guard len<3 + tag LLM, bukan sini.
+# Efisiensi 2026-09-14: naik ke 0.60 + top_k 15->6 (22 chunk doang, top 6 cukup).
+# Efek: input LLM turun ~40%, jawaban lebih nempel data. Kalau [GATAU] naik,
+# turunin lagi ke 0.55.
 MIN_QUERY_LEN = 3
 
 # Prefix struktur chunk ([Bab X - ...] / (bagian N)) = metadata internal retrieval.
@@ -38,22 +41,27 @@ def build_rag_prompt(message, history):
   # Query terlalu pendek ("p", "1") = bukan pertanyaan materi. Tetap dijawab
   # LLM (chit-chat) tapi langsung hit=0 biar masuk miss tanpa ngandelin skor.
   if len(message.strip()) >= MIN_QUERY_LEN:
-    scores, indexes = cari_embedding(index, query_embedding, top_k=5)
+    scores, indexes = cari_embedding(index, query_embedding, top_k=6)
     if len(scores) > 0 and len(indexes) > 0:
+      # Kumpulin ID lolos threshold dulu, ambil chunk 1 query batch
+      # (bukan N+1 query). Urutan skor dijaga biar konteks tetap relevan.
+      lolos = []
       for score, id in zip(scores[0], indexes[0]):
         if id == -1:
           continue
         if score >= SIMILARITY_THRESHOLD:
-          chunk = get_chunk_by_id(int(id))
-          if chunk is not None:
-            context.append(_strip_label(chunk))
+          lolos.append(int(id))
+      chunks = get_chunks_by_ids(lolos)
+      for id in lolos:
+        if id in chunks:
+          context.append(_strip_label(chunks[id]))
 
   hit_knowledge = 1 if context else 0
   knowledge = "\n\n".join(context) if context else "Tidak ada data relevan yang ditemukan."
   
   history_text = ""
 
-  for chat in history[-10:]:
+  for chat in history[-6:]:
     history_text += f"{chat['sender']}: {chat['text']}\n"
   
   prompt = f"""

@@ -75,14 +75,25 @@ def insert_history(user_id, sender, text):
       VALUES(?,?,?,datetime('now','localtime'))""", (user_id, sender, text)
     )
 
-def get_history(user_id):
+def get_history(user_id, limit=None):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
-    return conn.execute(
+    if limit is None:
+      return conn.execute(
+        """SELECT id, user_id, sender, text
+        FROM history
+        WHERE user_id = ?
+        ORDER BY id""", (user_id,)
+      ).fetchall()
+    # LLM cuma butuh N pesan terakhir: ambil DESC + LIMIT biar DB ga
+    # full-scan, lalu balikin ke urutan kronologis.
+    rows = conn.execute(
       """SELECT id, user_id, sender, text
       FROM history
       WHERE user_id = ?
-      ORDER BY id""", (user_id,)
+      ORDER BY id DESC
+      LIMIT ?""", (user_id, limit)
     ).fetchall()
+    return rows[::-1]
 
 def clear_history(user_id):
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:
@@ -122,6 +133,19 @@ def get_chunk_by_id(id):
   if row is None:
     return None
   return row[0]
+
+def get_chunks_by_ids(ids):
+  # Batch: 1 query buat N chunk (gantiin N+1 get_chunk_by_id di chatbot).
+  # Return dict {id: chunk} biar urutan skor FAISS tetap di pemanggil.
+  ids = [int(i) for i in ids if int(i) != -1]
+  if not ids:
+    return {}
+  with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn:
+    rows = conn.execute(
+      f"SELECT id, chunk FROM knowledge WHERE id IN ({','.join('?' * len(ids))})",
+      ids
+    ).fetchall()
+  return {r[0]: r[1] for r in rows}
 
 def clear_knowledge():
   with closing(sqlite3.connect(DB_FILE, timeout=TIMEOUT)) as conn, conn:

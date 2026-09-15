@@ -146,7 +146,7 @@ def api_chat():
       "error": "Pesan kosong"
     })
   user_id = get_user_id()
-  history = ambil_history(user_id)
+  history = ambil_history(user_id, limit=6, max_chars=180)
   ip = get_client_ip()
   if len(message) > MAX_PESAN:
     catat_audit(user_id, ip, "chat", message[:MAX_PESAN], 0, 0, "too_long")
@@ -174,7 +174,7 @@ def api_chat_stream():
       yield f"data: {json.dumps({'error': 'Pesan kosong'}, ensure_ascii=False)}\n\n"
     return Response(stream_with_context(empty_error()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
   user_id = get_user_id()
-  history = ambil_history(user_id)
+  history = ambil_history(user_id, limit=6, max_chars=180)
   ip = get_client_ip()
   if len(message) > MAX_PESAN:
     catat_audit(user_id, ip, "stream", message[:MAX_PESAN], 0, 0, "too_long")

@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TEMPERATURE = 0.7
+# Cap output: jawaban Mintif pendek (paragraf + 2 saran). Tanpa cap, model
+# bisa nulis 1000+ token = mahal + stream lama. 500 cukup buat materi + follow-up.
+MAX_TOKENS = 500
 
 def sanitize_markdown(text):
   if not text:
@@ -49,6 +52,7 @@ def get_ai_reply(system_prompt, prompt):
       }
     ],
     temperature=TEMPERATURE,
+    max_tokens=MAX_TOKENS,
     timeout=TIMEOUT
   )
     end = time.time()
@@ -76,6 +80,7 @@ def get_ai_reply_stream(system_prompt, prompt):
       }
     ],
     temperature=TEMPERATURE,
+    max_tokens=MAX_TOKENS,
     timeout=TIMEOUT,
     stream=True
   )

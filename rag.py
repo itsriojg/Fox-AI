@@ -28,7 +28,7 @@ def index_pdf():
    index_files.append(index_file)
   return index_files
     
-HEADING_PAT = r"(?m)^\s*([1-6])\.\s+(Apa itu HIMATIF[^\n]*|Sejarah HIMATIF[^\n]*|Visi dan Misi[^\n]*|Keanggotaan[^\n]*|Struktur Kepengurusan[^\n]*|Identitas Organisasi[^\n]*)"
+HEADING_PAT = r"(?m)^\s*([1-7])\.\s+(Apa itu HIMATIF[^\n]*|Sejarah HIMATIF[^\n]*|Visi dan Misi[^\n]*|Keanggotaan[^\n]*|Struktur Kepengurusan[^\n]*|Identitas Organisasi[^\n]*|Kepengurusan[^\n]*)"
 
 JABATAN = {
   "Ketua",
