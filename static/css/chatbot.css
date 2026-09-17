@@ -797,53 +797,34 @@ body{
     animation:messageShow .4s cubic-bezier(.22, 1, .36, 1);
 }
 
-.orbs{
-    display:flex;
-    align-items:center;
-    gap:5px;
-    min-width:auto;
+/* loader thinking = logo Mintif melayang naik-turun. Float = transform-only,
+   murah di HP. Drop-shadow statis (animasi filter tiap-frame berat, dibuang).
+   Kedip mata DIBUANG (percobaan dot overlay gagal: ga kelihatan di HP). */
+.typing-wrap{
+    position:relative;
+    width:32px;
+    height:32px;
+    flex-shrink:0;
+    animation:typingFloat 2.2s ease-in-out infinite;
+    pointer-events:none;
+}
+@keyframes typingFloat{
+    0%, 100%{ transform:translateY(0); }
+    50%{ transform:translateY(-3px); }
+}
+.typing-logo{
+    width:32px;
+    height:32px;
+    object-fit:contain;
+    filter:drop-shadow(0 0 6px rgba(20,216,255,.45)) drop-shadow(0 0 14px rgba(138,61,255,.30));
+    /* kill long-press context menu, sama kayak logo lain */
+    pointer-events:none;
+    -webkit-user-drag:none;
+    -webkit-touch-callout:none;
 }
 
-.orb{
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:linear-gradient(135deg, var(--mintif-a), var(--mintif-b) 50%, var(--mintif-c));
-    box-shadow:
-        0 0 5px rgba(20,216,255,.95),
-        0 0 10px rgba(78,123,255,.7),
-        0 0 16px rgba(138,61,255,.6);
-    transform-origin:center;
-    will-change:transform, opacity;
-    animation:orb-bounce 1.05s cubic-bezier(.2,.9,.3,1) infinite;
-}
-
-.orb::after{
-    display:none;
-}
-
-.orb:nth-child(1){ animation-delay:0s; }
-.orb:nth-child(2){ animation-delay:.14s; }
-.orb:nth-child(3){ animation-delay:.28s; }
-
-@keyframes orb-bounce{
-    0%{
-        transform:translateY(0) scale(.9);
-        opacity:.65;
-    }
-    22%{
-        transform:translateY(-6px) scale(1.15);
-        opacity:1;
-    }
-    55%{
-        transform:translateY(0) scale(1);
-        opacity:.9;
-    }
-    100%{
-        transform:translateY(0) scale(.9);
-        opacity:.65;
-    }
-}
+/* logo ekor AI DIBUANG (user: ga kelihatan gunanya pas streaming).
+   Bubble AI = teks polos lagi, tanpa logo follower. */
 
 .label{
     font-size:12px;
@@ -861,7 +842,7 @@ body{
 }
 
 @media (prefers-reduced-motion:reduce){
-    .orb{ animation:none !important; opacity:1; }
+    .typing-wrap{ animation:none !important; }
     .mintif-logo, .welcome-text h1, .welcome-text p, .suggestions button, .hero-logo, .hero h1, .hero p{ animation:none !important; opacity:1 !important; transform:none !important; }
     .message{ animation:none !important; }
 }

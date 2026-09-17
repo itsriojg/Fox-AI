@@ -106,17 +106,24 @@ def catat_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error=None, m
 # Tag akhir jawaban Mimin (konvensi prompt.py 2b): [OK]/[OOT]/[GATAU]/[CHIT].
 # [OK] = materi terjawab (bukan miss). Sisanya = miss gabungan.
 # Tag DICOPOT sebelum ke user/storage biar chat tetap bersih profesional.
-_TAG_RE = re.compile(r"\[(OK|OOT|GATAU|CHIT)\]\s*$")
+# Pola kuat: model kadang kasih newline/case beda setelah tag.
+_TAG_RE = re.compile(r"\[+(OK|OOT|GATAU|CHIT)\]+[ \t]*(?:\n|\s*$)", re.IGNORECASE)
+_TAG_TAIL_RE = re.compile(r"[ \t]+\[(OK|OOT|GATAU|CHIT)?[A-Z]*[ \t]*$", re.IGNORECASE)
 _TAG_MISS = {"OOT": "oot", "GATAU": "gatau", "CHIT": "chit"}
 
 def petik_tag(reply):
   if not reply:
     return reply, None
-  m = _TAG_RE.search(reply.strip())
-  if not m:
-    return reply, None
-  bersih = _TAG_RE.sub("", reply.strip()).strip()
-  return bersih, _TAG_MISS.get(m.group(1))
+  s = reply.strip()
+  m = _TAG_RE.search(s)
+  if m:
+    tag = m.group(1).upper()
+    bersih = _TAG_RE.sub("", s).strip()
+    bersih = _TAG_TAIL_RE.sub("", bersih).strip()
+    return bersih, _TAG_MISS.get(tag)
+  # sisa "[" nyangkut (stream kepotong tengah tag) — buang biar bersih
+  bersih = _TAG_TAIL_RE.sub("", s).strip()
+  return bersih, None
 
 @app.route("/health")
 def health():

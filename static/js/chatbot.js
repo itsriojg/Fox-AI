@@ -520,8 +520,18 @@ function renderMarkdown(raw){
 function renderAIBubble(el, raw){
   // Tag audit ([OK]/[OOT]/[GATAU]/[CHIT]) kadang kebawa token stream —
   // copot sebelum render biar user ga liat. Backend juga nyopot buat simpanan.
-  const bersih = String(raw).replace(/\[(OK|OOT|GATAU|CHIT)\]\s*$/, "").replace(/\s*\[$/, "");
-  el.innerHTML = renderMarkdown(bersih);
+  // Pola kuat: tag di akhir baris mana aja (model kadang newline setelah tag),
+  // plus sisa "[" nyangkut pas stream kepotong tengah tag.
+  const bersih = String(raw)
+    .replace(/\[+(OK|OOT|GATAU|CHIT)\]+[ \t]*(\n|$)/g, "$2")
+    .replace(/[ \t]+\[(OK|OOT|GATAU|CHIT)?[A-Za-z]*[ \t]*$/, "")
+    .replace(/\s*\[$/, "");
+  const html = renderMarkdown(bersih);
+  // render ke .ai-body kalau ada (bubble baru, disiapin pasang struktur
+  // di kirimPesan) — fallback el langsung buat bubble lama.
+  const body = el.querySelector ? el.querySelector(":scope > .ai-body") : null;
+  if (body) body.innerHTML = html;
+  else el.innerHTML = html;
 }
 
 async function kirimPesan(pesan){
@@ -590,7 +600,7 @@ async function kirimPesan(pesan){
     }
     aiBubble = document.createElement("div");
     aiBubble.className = "message AI";
-    aiBubble.textContent = "";
+    aiBubble.innerHTML = `<div class="ai-body"></div>`;
     messages.appendChild(aiBubble);
     updateClearButton();
     startFlush();
@@ -803,13 +813,9 @@ function tampilkanTyping(){
   const typing = document.createElement("div");
   typing.className = "typing-wrapper";
   typing.innerHTML = `
-    <div class="typing-loader" role="status" aria-live="polite" aria-label="Chatbot sedang mengetik">
-    <div class="orbs" aria-hidden="true">
-      <span class="orb"></span>
-      <span class="orb"></span>
-      <span class="orb"></span>
-    </div>
-    <span class="label">Thinking...</span>
+    <div class="typing-loader" role="status" aria-live="polite" aria-label="Mintif sedang berpikir">
+    <span class="typing-wrap" aria-hidden="true"><img class="typing-logo" src="/static/assets/mintif-logo.webp" alt=""></span>
+    <span class="label">Mimin mikir...</span>
   </div>
   `;
   messages.appendChild(typing);
