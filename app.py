@@ -78,15 +78,22 @@ def ambil_pesan():
   return pesan.strip() if isinstance(pesan, str) else ""
 
 def get_user_id():
-  # Frontend Vue kirim user_id sendiri (localStorage) biar lolos beda origin,
-  # via JSON atau form. Fallback ke session cookie buat web Flask lama.
+  # Return (uid, bad_uid). Frontend Vue kirim user_id sendiri (localStorage)
+  # biar lolos beda origin, via JSON atau form. Fallback ke session cookie
+  # buat web Flask lama. bad_uid=True kalau body ngirim user_id tapi formatnya
+  # invalid (M3 pentest 2026-09-17) — pemanggil catat ke audit biar kelihatan
+  # di pantau, tapi request TETAP jalan (nol breakage: tanpa 400).
   data = request.get_json(silent=True) or {}
-  uid = data.get("user_id") or request.form.get("user_id", "")
-  if isinstance(uid, str) and _UID_WEB_RE.match(uid):
-    return uid
+  raw = data.get("user_id") or request.form.get("user_id", "")
+  if isinstance(raw, str) and raw != "":
+    if _UID_WEB_RE.match(raw):
+      return raw, False
+    if "user_id" not in session:
+      session["user_id"] = secrets.token_hex(16)
+    return session["user_id"], True
   if "user_id" not in session:
     session["user_id"] = secrets.token_hex(16)
-  return session["user_id"]
+  return session["user_id"], False
 
 def get_client_ip():
   # Di produksi ada Nginx di depan -> IP asli ada di X-Forwarded-For.
@@ -141,7 +148,7 @@ def chatbot():
     "chatbot.html",
     nama="User",
     home_url=os.getenv("HOME_URL", "/"),
-    riwayat_chat=ambil_history(get_user_id())
+    riwayat_chat=ambil_history(get_user_id()[0])
   )
 
 @app.route("/api/chat", methods=["POST"])
@@ -152,11 +159,11 @@ def api_chat():
     return jsonify({
       "error": "Pesan kosong"
     })
-  user_id = get_user_id()
+  user_id, bad_uid = get_user_id()
   history = ambil_history(user_id, limit=6, max_chars=180)
   ip = get_client_ip()
   if len(message) > MAX_PESAN:
-    catat_audit(user_id, ip, "chat", message[:MAX_PESAN], 0, 0, "too_long")
+    catat_audit(user_id, ip, "chat", message[:MAX_PESAN], 0, 0, "too_long" if not bad_uid else "bad_uid")
     return jsonify({
       "error": PESAN_PANJANG
     }), 413
@@ -166,7 +173,7 @@ def api_chat():
   reply, miss_reason = petik_tag(reply)
   tambah_message(user_id, "User", message)
   tambah_message(user_id, "AI", sanitize_markdown(reply))
-  catat_audit(user_id, ip, "chat", message, hit, latency_ms, err, miss_reason)
+  catat_audit(user_id, ip, "chat", message, hit, latency_ms, err or ("bad_uid" if bad_uid else None), miss_reason)
 
   return jsonify({
     "reply": reply
@@ -180,18 +187,18 @@ def api_chat_stream():
     def empty_error():
       yield f"data: {json.dumps({'error': 'Pesan kosong'}, ensure_ascii=False)}\n\n"
     return Response(stream_with_context(empty_error()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-  user_id = get_user_id()
+  user_id, bad_uid = get_user_id()
   history = ambil_history(user_id, limit=6, max_chars=180)
   ip = get_client_ip()
   if len(message) > MAX_PESAN:
-    catat_audit(user_id, ip, "stream", message[:MAX_PESAN], 0, 0, "too_long")
+    catat_audit(user_id, ip, "stream", message[:MAX_PESAN], 0, 0, "too_long" if not bad_uid else "bad_uid")
     def too_long():
       yield f"data: {json.dumps({'error': PESAN_PANJANG}, ensure_ascii=False)}\n\n"
     return Response(stream_with_context(too_long()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
   start = time.time()
   system_p, prompt, err, hit = build_rag_prompt(message, history)
   if err == "embedding_error":
-    catat_audit(user_id, ip, "stream", message, 0, int((time.time() - start) * 1000), err)
+    catat_audit(user_id, ip, "stream", message, 0, int((time.time() - start) * 1000), err if not bad_uid else "bad_uid")
     def emb_error():
       yield f"data: {json.dumps({'error': 'Maaf, layanan pencarian sedang bermasalah. Silakan coba lagi nanti.'}, ensure_ascii=False)}\n\n"
     return Response(stream_with_context(emb_error()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
@@ -207,27 +214,40 @@ def api_chat_stream():
       # bubble kosong: kasih fallback hangat + audit 'empty_reply' biar pantau.
       if not full.strip():
         full = "Waduh, mimin blank sebentar. Coba kirim ulang pertanyaannya ya."
-        catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "empty_reply", miss_reason)
+        catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "empty_reply" if not bad_uid else "bad_uid", miss_reason)
         yield f"data: {json.dumps({'token': full}, ensure_ascii=False)}\n\n"
         tambah_message(user_id, "AI", sanitize_markdown(full))
         yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
         return
       full, miss_reason = petik_tag(full)
       tambah_message(user_id, "AI", sanitize_markdown(full))
-      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), None, miss_reason)
+      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "bad_uid" if bad_uid else None, miss_reason)
       yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
     except Exception as e:
       print(f"[STREAM ERROR] {e}")
       full, miss_reason = petik_tag(full)
       if full:
         tambah_message(user_id, "AI", sanitize_markdown(full))
-      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "stream_error", miss_reason)
+      catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "stream_error" if not bad_uid else "bad_uid", miss_reason)
       yield f"data: {json.dumps({'error': 'Maaf, server sedang mengalami kendala. Silakan coba lagi.'}, ensure_ascii=False)}\n\n"
   return Response(stream_with_context(generate()), mimetype="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Content-Type": "text/event-stream"})
 
 @app.route("/clear", methods=["POST"])
+@limiter.limit("5 per minute")
 def clear_history():
-  hapus_history(get_user_id())
+  # H2 pentest 2026-09-17: /clear percaya user_id body apa adanya. Versi aman
+  # tanpa breakage: user_id body WAJIB lolos regex (M3), kalau invalid/zonk
+  # pakai session cookie (web Flask same-origin tetap jalan, Vue kirim UID
+  # valid tetap jalan). Limit 5/menit biar abuse hapus-chat orang mahal.
+  data = request.get_json(silent=True) or {}
+  raw = data.get("user_id") or request.form.get("user_id", "")
+  if isinstance(raw, str) and raw != "" and _UID_WEB_RE.match(raw):
+    uid = raw
+  else:
+    if "user_id" not in session:
+      session["user_id"] = secrets.token_hex(16)
+    uid = session["user_id"]
+  hapus_history(uid)
   return redirect("/chatbot")
 
 if __name__ == "__main__":
