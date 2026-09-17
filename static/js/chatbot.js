@@ -426,7 +426,9 @@ window.addEventListener('pageshow', (event) => {
 
 suggestions.forEach((button)=>{
   button.addEventListener("click", ()=>{
-    const pesan = button.textContent.trim();
+    // teks tombol sekarang ada ikon di <span>: ambil span terakhir (label)
+    const label = button.querySelector("span:last-child");
+    const pesan = (label ? label.textContent : button.textContent).trim();
       kirimPesan(pesan);
   });
 });
@@ -437,7 +439,7 @@ function updateSendButton(){
 }
 
 function setSending(isSending){
-  sendButton.dataset.sending = isSending;
+  sendButton.dataset.sending = isSending ? "true" : "false";
   input.disabled = isSending;
   suggestions.forEach((button) => button.disabled = isSending);
   clearButton.disabled = isSending || messages.children.length === 0;
@@ -456,7 +458,7 @@ function showRetryButton(pesan, aiBubble) {
   const retryBtn = document.createElement("button");
   retryBtn.textContent = "Coba lagi";
   retryBtn.className = "retry-button";
-  retryBtn.style.cssText = "padding:8px 16px; border-radius:999px; border:1px solid rgba(175,157,128,.4); background:rgba(255,255,255,.06); color:#FBFBFB; cursor:pointer; font-size:13px; font-family: Poppins, sans-serif;";
+  retryBtn.style.cssText = "padding:8px 16px; border-radius:999px; border:1px solid rgba(20,216,255,.4); background:rgba(20,216,255,.06); color:#FBFBFB; cursor:pointer; font-size:13px; font-family: Poppins, sans-serif;";
   retryBtn.addEventListener("click", () => {
     retryWrapper.remove();
     if (aiBubble && aiBubble.parentNode) {
@@ -562,6 +564,7 @@ async function kirimPesan(pesan){
         clearInterval(flushTimer);
         flushTimer = null;
         setSending(false);
+        input.focus();
         scrollkebawahSmooth();
       }
     }, 20);
@@ -643,25 +646,12 @@ async function kirimPesan(pesan){
         }
       }
     }
-    if (buffer.trim().startsWith("data:")) {
-      try {
-        const data = JSON.parse(buffer.trim().slice(5).trim());
-        if (data.token) for (const ch of data.token) charQueue.push(ch);
-        if (data.error && !hasStreamed && charQueue.length === 0) {
-          stopFlushImmediate();
-          if (typing && typing.parentNode) typing.remove();
-          isTypingRemoved = true;
-          aiBubble.textContent = data.error;
-          setSending(false);
-        }
-        if (data.done) doneReceived = true;
-      } catch (e) {}
-    }
     if (doneReceived && charQueue.length === 0) {
       stopFlushImmediate();
       if (typing && typing.parentNode) typing.remove();
       isTypingRemoved = true;
       setSending(false);
+      input.focus();
       scrollkebawahSmooth();
     } else if (!doneReceived) {
       streamFinished = true;
@@ -729,6 +719,7 @@ async function kirimPesan(pesan){
     if (typing && typing.parentNode && !isTypingRemoved) typing.remove();
     if (doneReceived && charQueue.length === 0 && flushTimer === null) {
       setSending(false);
+      input.focus();
     } else if (!hasStreamed && charQueue.length === 0 && !doneReceived) {
       // will be handled by catch fallback
     }

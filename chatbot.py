@@ -5,7 +5,7 @@ from vector_db import load_index, cari_embedding, rebuild_faiss
 from database import get_chunks_by_ids
 import os
 
-SIMILARITY_THRESHOLD = 0.60
+SIMILARITY_THRESHOLD = 0.55
 # Diukur 2026-09-11 (23 query, Jina 1024-d): valid-HIMATIF top1 0.618-0.717,
 # OOT murni (presiden/resep/sudo) <= 0.514. Threshold 0.55 = semua valid lolos,
 # OOT murni ke-filter. Gibberish pendek + chit-chat ("p", "kadal", ...) skornya
@@ -13,6 +13,9 @@ SIMILARITY_THRESHOLD = 0.60
 # Efisiensi 2026-09-14: naik ke 0.60 + top_k 15->6 (22 chunk doang, top 6 cukup).
 # Efek: input LLM turun ~40%, jawaban lebih nempel data. Kalau [GATAU] naik,
 # turunin lagi ke 0.55.
+# FIX 2026-09-16: balik ke 0.55 + top_k 6->10. Chunk jawaban ketua (id 2,
+# Anindita, skor 0.637 rank 7) ketendang top-6 -> LLM jujur [GATAU] padahal
+# data ada. 0.55 tetap aman dari OOT murni (<=0.514).
 MIN_QUERY_LEN = 3
 
 # Prefix struktur chunk ([Bab X - ...] / (bagian N)) = metadata internal retrieval.
@@ -41,7 +44,7 @@ def build_rag_prompt(message, history):
   # Query terlalu pendek ("p", "1") = bukan pertanyaan materi. Tetap dijawab
   # LLM (chit-chat) tapi langsung hit=0 biar masuk miss tanpa ngandelin skor.
   if len(message.strip()) >= MIN_QUERY_LEN:
-    scores, indexes = cari_embedding(index, query_embedding, top_k=6)
+    scores, indexes = cari_embedding(index, query_embedding, top_k=10)
     if len(scores) > 0 and len(indexes) > 0:
       # Kumpulin ID lolos threshold dulu, ambil chunk 1 query batch
       # (bukan N+1 query). Urutan skor dijaga biar konteks tetap relevan.
