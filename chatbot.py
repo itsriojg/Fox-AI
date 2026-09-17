@@ -29,21 +29,38 @@ def _strip_label(chunk):
     _CHUNK_LABEL_RE = _re.compile(r"^\[Bab [^\]]+\]( \(bagian \d+\))?\s*\n?")
   return _CHUNK_LABEL_RE.sub("", chunk).strip()
 
+import sqlite3
+
 if os.path.exists("knowledge.index"):
     index = load_index()
 else:
-    rebuild_faiss()
-    index = load_index()
+    # Fresh clone: tabel knowledge belum ada (dibuat app.py:60-62 SETELAH
+    # import ini) -> jangan crash di import-time. Index dibangun nanti via
+    # rag.build_knowledge() (app.py:63-67), atau lazy di bawah saat tabel ada.
+    try:
+        rebuild_faiss()
+        index = load_index()
+    except (sqlite3.OperationalError, ValueError, RuntimeError) as e:
+        print(f"[WARN] Index belum bisa dibangun saat import: {e}")
+        index = None
 
 def build_rag_prompt(message, history):
+  global index
   try:
     query_embedding = get_embedding(message)
   except RuntimeError:
     return None, None, "embedding_error", 0
   context = []
+  # Index belum kebangun (fresh clone, prebuild jalan SETELAH import ini):
+  # coba lazy-load kalau file sudah ada, kalau belum -> hit=0, LLM jawab jujur.
+  if index is None and os.path.exists("knowledge.index"):
+    try:
+      index = load_index()
+    except Exception as e:
+      print(f"[WARN] Gagal lazy-load index: {e}")
   # Query terlalu pendek ("p", "1") = bukan pertanyaan materi. Tetap dijawab
   # LLM (chit-chat) tapi langsung hit=0 biar masuk miss tanpa ngandelin skor.
-  if len(message.strip()) >= MIN_QUERY_LEN:
+  if index is not None and len(message.strip()) >= MIN_QUERY_LEN:
     scores, indexes = cari_embedding(index, query_embedding, top_k=10)
     if len(scores) > 0 and len(indexes) > 0:
       # Kumpulin ID lolos threshold dulu, ambil chunk 1 query batch
