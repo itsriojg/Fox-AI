@@ -9,7 +9,15 @@ load_dotenv()
 TEMPERATURE = 0.7
 # Cap output: jawaban Mintif pendek (paragraf + 2 saran). Tanpa cap, model
 # bisa nulis 1000+ token = mahal + stream lama. 500 cukup buat materi + follow-up.
-MAX_TOKENS = 500
+# TAPI model reasoning (DeepSeek V4 via Flaz, gpt-oss via Groq) mikir dulu
+# SEBELUM jawab, dan thinking ikut makan budget yang sama. Prompt ambigu
+# ("kahim saat ini saha min": typo Sunda + konteks temporal) bikin thinking
+# 500-941 token -> budget 500 habis duluan -> finish:length -> jawaban KOSONG.
+# Diukur 2026-09-17: budget 500 = kosong, 1500 = jawab [GATAU] bener.
+# Flaz default 1500 (bayar per token aktual, bukan budget). Groq tetap 500
+# (reasoning_effort=low beneran nurunin thinking di Groq, free-tier pula).
+# Override manual: AI_MAX_TOKENS di .env.
+MAX_TOKENS = int(os.getenv("AI_MAX_TOKENS") or (1500 if os.getenv("AI_BASE_URL") else 500))
 # gpt-oss-120b = reasoning model: mikir dulu (chunk kosong) SEBELUM jawab.
 # Prompt RAG ~7rb char bikin thinking 400+ chunk -> budget 500 habis duluan ->
 # finish:length, jawaban 0 char / kepotong tengah kata. reasoning_effort=low

@@ -202,6 +202,16 @@ def api_chat_stream():
       for token in get_ai_reply_stream(system_p, prompt):
         full += token
         yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+      # Model reasoning bisa balikin KOSONG kalau thinking makan habis budget
+      # (finish:length, diukur 2026-09-17 di DeepSeek V4 Flash). Jangan simpan
+      # bubble kosong: kasih fallback hangat + audit 'empty_reply' biar pantau.
+      if not full.strip():
+        full = "Waduh, mimin blank sebentar. Coba kirim ulang pertanyaannya ya."
+        catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), "empty_reply", miss_reason)
+        yield f"data: {json.dumps({'token': full}, ensure_ascii=False)}\n\n"
+        tambah_message(user_id, "AI", sanitize_markdown(full))
+        yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+        return
       full, miss_reason = petik_tag(full)
       tambah_message(user_id, "AI", sanitize_markdown(full))
       catat_audit(user_id, ip, "stream", message, hit, int((time.time() - start) * 1000), None, miss_reason)
