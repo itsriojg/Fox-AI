@@ -600,7 +600,8 @@ body{
    Absolute ke .chat-container (fixed) biar ngambang di atas composer. */
 #jump-latest{
     position:absolute;
-    right:18px;
+    left:50%;
+    transform:translateX(-50%);
     bottom:104px;
     width:44px;
     height:44px;
@@ -620,7 +621,7 @@ body{
     transition:var(--transition);
 }
 #jump-latest[hidden]{ display:none; }
-#jump-latest:active{ transform:scale(.94); }
+#jump-latest:active{ transform:translateX(-50%) scale(.94); }
 @media (hover:hover){
   #jump-latest:hover{
       background:rgba(20,216,255,.18);

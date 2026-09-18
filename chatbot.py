@@ -36,6 +36,10 @@ def _strip_label(chunk):
 # konteks -> jawab bener. Deterministik, nol token. Hanya untuk query
 # retrieval; teks asli user tetap dikirim ke LLM/history apa adanya.
 _ALIAS_TUKAR = [
+  # Urutan penting: singkatan di-expand DULUAN, kata dasar (ketua/wakil/
+  # sekretaris/bendahara) cuma nambah "himatif" kalau BELUM ada himatif
+  # di belakangnya (negative lookahead) biar ga double ("ketua himatif
+  # himatif"). Imbuhan -nya/-ku/-mu ikut dikenal.
   ("wakahim", "wakil ketua himatif"),
   ("wakim", "wakil ketua himatif"),
   ("kahim", "ketua himatif"),
@@ -49,12 +53,29 @@ _ALIAS_TUKAR = [
   ("kominfo", "komunikasi dan informasi"),
   ("litbang", "penelitian pengembangan"),
 ]
+# kata dasar + imbuhan opsional, tanpa "himatif" di belakangnya
+_DASAR_RE = None
 
 def _normalisasi(query):
   import re as _re
-  s = query
+  global _DASAR_RE
+  # Urutan: kata dasar DULU (ketua->ketua himatif), BARU singkatan
+  # (wakahim->wakil ketua himatif). Kebalik = hasil expand dimakan lagi
+  # ("wakil ketua himatif" -> "... himatif ketua himatif").
+  if _DASAR_RE is None:
+    _DASAR_RE = _re.compile(r"\b(ketua|wakil(?: ketua)?|sekretaris(?: umum)?|bendahara(?: umum)?)(nya|ku|mu)?\b(?!\s+himatif)", _re.IGNORECASE)
+  def _dasar(m):
+    k = m.group(1).lower()
+    if k.startswith("wakil"):
+      return "wakil ketua himatif"
+    if k.startswith("sekretaris"):
+      return "sekretaris umum himatif"
+    if k.startswith("bendahara"):
+      return "bendahara umum himatif"
+    return "ketua himatif"
+  s = _DASAR_RE.sub(_dasar, query)
   for singkat, panjang in _ALIAS_TUKAR:
-    s = _re.sub(r"\b" + singkat + r"\b", panjang, s, flags=_re.IGNORECASE)
+    s = _re.sub(r"\b" + singkat + r"(nya|ku|mu)?\b(?!\s+himatif)", panjang, s, flags=_re.IGNORECASE)
   return s
 
 import sqlite3

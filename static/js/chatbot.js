@@ -848,7 +848,8 @@ if(jumpLatestBtn){
   jumpLatestBtn.addEventListener("click", () => {
     stickBottom = true;
     jumpLatestBtn.hidden = true;
-    input.focus();
+    // SENGAJA tanpa input.focus(): user cuma mau baca terbaru, bukan ngetik.
+    // Keyboard naik cuma kalau user tap input sendiri.
     scrollkebawahSmooth();
   });
 }
