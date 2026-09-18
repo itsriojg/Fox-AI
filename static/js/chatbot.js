@@ -7,6 +7,8 @@ const suggestions = document.querySelectorAll(".suggestion-btn");
 const clearForm = document.querySelector("#clear-form");
 const clearButton = document.querySelector("#clear-button");
 const backButton = document.querySelector("#back-button");
+const chatHistoryEl = document.querySelector(".chat-history");
+const jumpLatestBtn = document.querySelector("#jump-latest");
 const overlay = document.querySelector("#circleOverlay");
 const root = document.documentElement;
 
@@ -536,6 +538,9 @@ function renderAIBubble(el, raw){
 
 async function kirimPesan(pesan){
   welcomeScreen.style.display = "none";
+  // pesan baru = user mulai dari bawah, nempel lagi
+  stickBottom = true;
+  if(jumpLatestBtn) jumpLatestBtn.hidden = true;
   buatBubble("User", pesan);
   input.value = "";
   setSending(true);
@@ -574,7 +579,6 @@ async function kirimPesan(pesan){
         clearInterval(flushTimer);
         flushTimer = null;
         setSending(false);
-        input.focus();
         scrollkebawahSmooth();
       }
     }, 20);
@@ -661,7 +665,6 @@ async function kirimPesan(pesan){
       if (typing && typing.parentNode) typing.remove();
       isTypingRemoved = true;
       setSending(false);
-      input.focus();
       scrollkebawahSmooth();
     } else if (!doneReceived) {
       streamFinished = true;
@@ -729,7 +732,6 @@ async function kirimPesan(pesan){
     if (typing && typing.parentNode && !isTypingRemoved) typing.remove();
     if (doneReceived && charQueue.length === 0 && flushTimer === null) {
       setSending(false);
-      input.focus();
     } else if (!hasStreamed && charQueue.length === 0 && !doneReceived) {
       // will be handled by catch fallback
     }
@@ -824,10 +826,38 @@ function tampilkanTyping(){
 }
 
 let pendingScroll = false;
+// Stick-to-bottom: true = user di bawah, stream boleh auto-scroll.
+// User scroll ke atas (>120px dari bawah) = lepas, stream jalan terus
+// tapi ga narik paksa. Kirim pesan baru / stream mulai = nempel lagi.
+let stickBottom = true;
+const STICK_TOLERANSI = 120;
+
+function cekStick(){
+  if(!chatHistoryEl) return;
+  const jarak = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
+  stickBottom = jarak <= STICK_TOLERANSI;
+  if(jumpLatestBtn) jumpLatestBtn.hidden = stickBottom;
+}
+if(chatHistoryEl){
+  chatHistoryEl.addEventListener("scroll", () => {
+    if(pendingScroll) return;
+    requestAnimationFrame(cekStick);
+  }, {passive:true});
+}
+if(jumpLatestBtn){
+  jumpLatestBtn.addEventListener("click", () => {
+    stickBottom = true;
+    jumpLatestBtn.hidden = true;
+    input.focus();
+    scrollkebawahSmooth();
+  });
+}
 
 function scrollkebawah(){
   const chatHistory = document.querySelector(".chat-history");
   if(!chatHistory) return;
+  // user lagi baca atas = jangan tarik paksa
+  if(!stickBottom) return;
   if(pendingScroll) return;
   pendingScroll = true;
   requestAnimationFrame(() => {

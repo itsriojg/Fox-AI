@@ -596,6 +596,38 @@ body{
     width:100%;
 }
 
+/* FAB jump-to-latest: muncul cuma pas user scroll ke atas (stick lepas).
+   Absolute ke .chat-container (fixed) biar ngambang di atas composer. */
+#jump-latest{
+    position:absolute;
+    right:18px;
+    bottom:104px;
+    width:44px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(20,216,255,.35);
+    border-radius:50%;
+    background:rgba(28,31,35,.92);
+    color:#FBFBFB;
+    font-size:20px;
+    font-weight:700;
+    line-height:1;
+    cursor:pointer;
+    z-index:30;
+    box-shadow:0 4px 16px rgba(0,0,0,.45), 0 0 12px rgba(20,216,255,.25);
+    transition:var(--transition);
+}
+#jump-latest[hidden]{ display:none; }
+#jump-latest:active{ transform:scale(.94); }
+@media (hover:hover){
+  #jump-latest:hover{
+      background:rgba(20,216,255,.18);
+      border-color:rgba(20,216,255,.50);
+  }
+}
+
 .chat-input{
     flex-shrink:0;
     padding:16px 20px 24px;

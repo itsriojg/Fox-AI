@@ -122,6 +122,7 @@
     </div>
         <div id="messages">{% for pesan in riwayat_chat %}<div class="message {{ pesan['sender'] }}">{{ pesan["text"] }}</div>{% endfor %}</div>
         </div>
+    <button type="button" id="jump-latest" aria-label="Lompat ke chat terbaru" hidden>↓</button>
 
     <!-- Input -->
     <div class="chat-input">
