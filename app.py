@@ -115,7 +115,10 @@ def catat_audit(user_id, ip, endpoint, user_text, hit, latency_ms, error=None, m
 # Tag DICOPOT sebelum ke user/storage biar chat tetap bersih profesional.
 # Pola kuat: model kadang kasih newline/case beda setelah tag.
 _TAG_RE = re.compile(r"\[+(OK|OOT|GATAU|CHIT)\]+[ \t]*(?:\n|\s*$)", re.IGNORECASE)
-_TAG_TAIL_RE = re.compile(r"[ \t]+\[(OK|OOT|GATAU|CHIT)?[A-Z]*[ \t]*$", re.IGNORECASE)
+_TAG_TAIL_RE = re.compile(r"[ \t]+\[(OK|OOT|GATAU|CHIT)?[A-Z]*\]?[ \t]*$", re.IGNORECASE)
+# Tag halu (model kadang ngarang [MINTIF]/[INFO]/dsb): ikut dicopot dari
+# tampilan biar user ga liat, tapi audit = miss (None) biar ketauan di pantau.
+_TAG_HALU_RE = re.compile(r"\[+[A-Z]{2,}\]+[ \t]*(?:\n|\s*$)", re.IGNORECASE)
 _TAG_MISS = {"OOT": "oot", "GATAU": "gatau", "CHIT": "chit"}
 
 def petik_tag(reply):
@@ -130,6 +133,9 @@ def petik_tag(reply):
     return bersih, _TAG_MISS.get(tag)
   # sisa "[" nyangkut (stream kepotong tengah tag) — buang biar bersih
   bersih = _TAG_TAIL_RE.sub("", s).strip()
+  # tag halu di ekor? copot dari tampilan, audit tetap miss
+  if _TAG_HALU_RE.search(bersih):
+    bersih = _TAG_HALU_RE.sub("", bersih).strip()
   return bersih, None
 
 @app.route("/health")

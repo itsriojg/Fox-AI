@@ -29,6 +29,34 @@ def _strip_label(chunk):
     _CHUNK_LABEL_RE = _re.compile(r"^\[Bab [^\]]+\]( \(bagian \d+\))?\s*\n?")
   return _CHUNK_LABEL_RE.sub("", chunk).strip()
 
+# Alias singkatan user -> istilah knowledge, dipakai SEBELUM embedding.
+# Diukur 2026-09-18: "wakahim siapa?" mentah = chunk jawaban (id 2) rank 17
+# skor 0.542 (kepotong top_k + di bawah threshold) -> [GATAU] padahal data ada.
+# Dinormalisasi "wakil ketua himatif siapa?" = id 2 rank 7 skor 0.62 -> masuk
+# konteks -> jawab bener. Deterministik, nol token. Hanya untuk query
+# retrieval; teks asli user tetap dikirim ke LLM/history apa adanya.
+_ALIAS_TUKAR = [
+  ("wakahim", "wakil ketua himatif"),
+  ("wakim", "wakil ketua himatif"),
+  ("kahim", "ketua himatif"),
+  ("sekum", "sekretaris umum himatif"),
+  ("bendum", "bendahara umum himatif"),
+  ("kadep", "kepala departemen"),
+  ("waka", "wakil ketua"),
+  ("danus", "dana usaha"),
+  ("keorgan", "keorganisasian"),
+  ("psdm", "pemberdayaan sumber daya mahasiswa"),
+  ("kominfo", "komunikasi dan informasi"),
+  ("litbang", "penelitian pengembangan"),
+]
+
+def _normalisasi(query):
+  import re as _re
+  s = query
+  for singkat, panjang in _ALIAS_TUKAR:
+    s = _re.sub(r"\b" + singkat + r"\b", panjang, s, flags=_re.IGNORECASE)
+  return s
+
 import sqlite3
 
 if os.path.exists("knowledge.index"):
@@ -47,7 +75,9 @@ else:
 def build_rag_prompt(message, history):
   global index
   try:
-    query_embedding = get_embedding(message)
+    # Normalisasi alias DULU biar embedding nemu chunk jawaban
+    # (wakahim->wakil ketua himatif, dst). Teks asli tetap ke LLM/history.
+    query_embedding = get_embedding(_normalisasi(message))
   except RuntimeError:
     return None, None, "embedding_error", 0
   context = []
@@ -61,10 +91,13 @@ def build_rag_prompt(message, history):
   # Query terlalu pendek ("p", "1") = bukan pertanyaan materi. Tetap dijawab
   # LLM (chit-chat) tapi langsung hit=0 biar masuk miss tanpa ngandelin skor.
   if index is not None and len(message.strip()) >= MIN_QUERY_LEN:
-    scores, indexes = cari_embedding(index, query_embedding, top_k=10)
+    scores, indexes = cari_embedding(index, query_embedding, top_k=15)
     if len(scores) > 0 and len(indexes) > 0:
       # Kumpulin ID lolos threshold dulu, ambil chunk 1 query batch
       # (bukan N+1 query). Urutan skor dijaga biar konteks tetap relevan.
+      # top_k 15: chunk jawaban ketua/waka (id 2, skor ~0.64 rank 7-13)
+      # kepotong top-10 -> [GATAU] padahal data ada (diukur 2026-09-18).
+      # 22 chunk doang, cost token +~500 char, OOT murni tetap kefilter 0.55.
       lolos = []
       for score, id in zip(scores[0], indexes[0]):
         if id == -1:
