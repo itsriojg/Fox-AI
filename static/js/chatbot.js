@@ -832,8 +832,19 @@ let pendingScroll = false;
 let stickBottom = true;
 const STICK_TOLERANSI = 120;
 
+function lagiWelcome(){
+  if(messages.children.length > 0) return false;
+  if(welcomeScreen && getComputedStyle(welcomeScreen).display === "none") return false;
+  return true;
+}
+
 function cekStick(){
   if(!chatHistoryEl) return;
+  // welcome screen = belum ada chat, FAB ngumpet (belum ada "terbaru")
+  if(lagiWelcome()){
+    if(jumpLatestBtn) jumpLatestBtn.hidden = true;
+    return;
+  }
   const jarak = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
   stickBottom = jarak <= STICK_TOLERANSI;
   if(jumpLatestBtn) jumpLatestBtn.hidden = stickBottom;

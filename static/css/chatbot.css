@@ -143,12 +143,10 @@ body{
     border-radius:12px;
     background:rgba(20,216,255,.10);
     color:#FBFBFB;
-    font-size:20px;
-    font-weight:700;
-    line-height:1;
     cursor:pointer;
     transition:var(--transition);
 }
+.back-button svg{ display:block; }
 .back-button:active{
     transform:scale(.96);
 }
@@ -432,10 +430,15 @@ body{
 }
 
 .suggestions button .sug-ico{
-    font-size:20px;
-    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:20px;
+    height:20px;
+    color:rgba(20,216,255,.85);
     filter:drop-shadow(0 0 8px rgba(20,216,255,.35));
 }
+.suggestions button .sug-ico svg{ display:block; }
 
 .suggestions button:nth-child(1){ animation-delay: 0.95s; }
 .suggestions button:nth-child(2){ animation-delay: 1.15s; }
@@ -612,14 +615,12 @@ body{
     border-radius:50%;
     background:rgba(28,31,35,.92);
     color:#FBFBFB;
-    font-size:20px;
-    font-weight:700;
-    line-height:1;
     cursor:pointer;
     z-index:30;
     box-shadow:0 4px 16px rgba(0,0,0,.45), 0 0 12px rgba(20,216,255,.25);
     transition:var(--transition);
 }
+#jump-latest svg{ display:block; }
 #jump-latest[hidden]{ display:none; }
 #jump-latest:active{ transform:translateX(-50%) scale(.94); }
 @media (hover:hover){
@@ -699,12 +700,11 @@ body{
     border-radius:50%;
     background:linear-gradient(135deg, var(--mintif-a), var(--mintif-b) 50%, var(--mintif-c));
     color:#0B1420;
-    font-size:18px;
-    font-weight:700;
     cursor:pointer;
     box-shadow:0 0 12px rgba(20,216,255,.35);
     transition:background .25s ease, box-shadow .25s ease, transform .15s ease, color .25s ease;
 }
+.chat-input button svg{ display:block; }
 
 @media (hover:hover){
   .chat-input button:hover{
