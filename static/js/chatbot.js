@@ -401,6 +401,8 @@ window.addEventListener('pageshow', (event) => {
   const chatInput = document.querySelector("#chat-input");
   if (!chatHistory) return;
   function handleViewportResize(){
+    // user lagi baca atas = viewport goyang (keyboard/status bar) jangan narik
+    if(!stickBottom) return;
     // delay 1 frame biar viewport udah settle
     requestAnimationFrame(() => scrollkebawah());
   }
@@ -579,7 +581,8 @@ async function kirimPesan(pesan){
         clearInterval(flushTimer);
         flushTimer = null;
         setSending(false);
-        scrollkebawahSmooth();
+        // user lagi baca atas = stream kelar jangan narik, biarin + FAB muncul
+        if(stickBottom) scrollkebawahSmooth();
       }
     }, 20);
   }
@@ -665,7 +668,8 @@ async function kirimPesan(pesan){
       if (typing && typing.parentNode) typing.remove();
       isTypingRemoved = true;
       setSending(false);
-      scrollkebawahSmooth();
+      // user lagi baca atas = stream kelar jangan narik, biarin + FAB muncul
+      if(stickBottom) scrollkebawahSmooth();
     } else if (!doneReceived) {
       streamFinished = true;
       doneReceived = true;
@@ -839,8 +843,10 @@ function cekStick(){
   if(jumpLatestBtn) jumpLatestBtn.hidden = stickBottom;
 }
 if(chatHistoryEl){
+  // SENGAJA tanpa gate pendingScroll: cekStick cuma BACA posisi (idempoten),
+  // jadi aman dipanggil dari event scroll manapun. Program scroll ke bawah
+  // -> jarak kecil -> stick true. User scroll ke atas -> jarak gede -> lepas.
   chatHistoryEl.addEventListener("scroll", () => {
-    if(pendingScroll) return;
     requestAnimationFrame(cekStick);
   }, {passive:true});
 }
