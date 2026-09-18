@@ -139,18 +139,25 @@ body{
     align-items:center;
     justify-content:center;
     flex-shrink:0;
-    border:none;
-    border-radius:8px;
-    background:transparent;
-    color:rgba(251,251,251,.7);
-    font-size:18px;
+    border:1px solid rgba(20,216,255,.35);
+    border-radius:12px;
+    background:rgba(20,216,255,.10);
+    color:#FBFBFB;
+    font-size:20px;
+    font-weight:700;
+    line-height:1;
     cursor:pointer;
     transition:var(--transition);
+}
+.back-button:active{
+    transform:scale(.96);
 }
 
 @media (hover:hover){
   .back-button:hover{
-      background:rgba(255,255,255,.05);
+      background:rgba(20,216,255,.18);
+      border-color:rgba(20,216,255,.50);
+      box-shadow:0 0 12px rgba(20,216,255,.25);
       color:#FBFBFB;
   }
 }
