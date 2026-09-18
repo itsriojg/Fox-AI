@@ -401,8 +401,6 @@ window.addEventListener('pageshow', (event) => {
   const chatInput = document.querySelector("#chat-input");
   if (!chatHistory) return;
   function handleViewportResize(){
-    // user lagi baca atas = viewport goyang (keyboard/status bar) jangan narik
-    if(!stickBottom) return;
     // delay 1 frame biar viewport udah settle
     requestAnimationFrame(() => scrollkebawah());
   }
@@ -581,8 +579,7 @@ async function kirimPesan(pesan){
         clearInterval(flushTimer);
         flushTimer = null;
         setSending(false);
-        // user lagi baca atas = stream kelar jangan narik, biarin + FAB muncul
-        if(stickBottom) scrollkebawahSmooth();
+        scrollkebawahSmooth();
       }
     }, 20);
   }
@@ -668,8 +665,7 @@ async function kirimPesan(pesan){
       if (typing && typing.parentNode) typing.remove();
       isTypingRemoved = true;
       setSending(false);
-      // user lagi baca atas = stream kelar jangan narik, biarin + FAB muncul
-      if(stickBottom) scrollkebawahSmooth();
+      scrollkebawahSmooth();
     } else if (!doneReceived) {
       streamFinished = true;
       doneReceived = true;
@@ -830,9 +826,9 @@ function tampilkanTyping(){
 }
 
 let pendingScroll = false;
-// Stick-to-bottom: true = user di bawah, stream boleh auto-scroll.
-// User scroll ke atas (>120px dari bawah) = lepas, stream jalan terus
-// tapi ga narik paksa. Kirim pesan baru / stream mulai = nempel lagi.
+// Autoscroll model lama (maksa nempel tiap token, kayak biasa).
+// stickBottom cuma dipakai buat ngatur FAB jump-to-latest muncul/ilangan,
+// BUKAN buat nahan scroll. Keyboard tetap diem (tanpa input.focus()).
 let stickBottom = true;
 const STICK_TOLERANSI = 120;
 
@@ -863,8 +859,6 @@ if(jumpLatestBtn){
 function scrollkebawah(){
   const chatHistory = document.querySelector(".chat-history");
   if(!chatHistory) return;
-  // user lagi baca atas = jangan tarik paksa
-  if(!stickBottom) return;
   if(pendingScroll) return;
   pendingScroll = true;
   requestAnimationFrame(() => {
